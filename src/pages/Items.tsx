@@ -7,21 +7,90 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   Search, Filter, MapPin, Clock, Eye, Heart, 
-  Grid, List, ChevronDown, X, Sparkles 
+  Grid, List, ChevronDown, X, Sparkles, Loader2, ImageOff
 } from "lucide-react";
+import { useItems } from "@/hooks/useItems";
+import { Item } from "@/types/item";
+import { formatDistanceToNow } from "date-fns";
 
-const mockItems = [
-  { id: 1, name: "iPhone 15 Pro Max", type: "Lost", category: "Electronics", location: "Central Library", date: "2 hours ago", image: "📱", matchScore: 92, description: "Space Black, 256GB with clear case" },
-  { id: 2, name: "Blue Nike Backpack", type: "Found", category: "Bags & Wallets", location: "Student Center", date: "5 hours ago", image: "🎒", matchScore: 88, description: "Navy blue with white logo, contains books" },
-  { id: 3, name: "MacBook Air M2", type: "Lost", category: "Electronics", location: "Cafeteria", date: "1 day ago", image: "💻", matchScore: 0, description: "Silver, has stickers on the cover" },
-  { id: 4, name: "Toyota Car Keys", type: "Lost", category: "Keys", location: "Parking Lot B", date: "2 days ago", image: "🔑", matchScore: 95, description: "Black key fob with gym membership tag" },
-  { id: 5, name: "Ray-Ban Sunglasses", type: "Found", category: "Accessories", location: "Sports Field", date: "3 days ago", image: "🕶️", matchScore: 0, description: "Black Wayfarer style, scratched lens" },
-  { id: 6, name: "Student ID Card", type: "Found", category: "Documents", location: "Admin Building", date: "4 days ago", image: "🪪", matchScore: 75, description: "University student card, name visible" },
-  { id: 7, name: "AirPods Pro 2", type: "Lost", category: "Electronics", location: "Gym", date: "5 days ago", image: "🎧", matchScore: 0, description: "White case with engraving 'JD'" },
-  { id: 8, name: "Black Leather Wallet", type: "Found", category: "Bags & Wallets", location: "Bus Stop", date: "1 week ago", image: "👛", matchScore: 82, description: "Contains cards, no cash" },
-];
+const categories = ["All", "Electronics", "Bags & Wallets", "Documents", "Keys", "Clothing", "Accessories", "Jewelry", "Books", "Sports Equipment", "Other"];
 
-const categories = ["All", "Electronics", "Bags & Wallets", "Documents", "Keys", "Clothing", "Accessories"];
+const ItemCard = ({ item, viewMode, index }: { item: Item; viewMode: "grid" | "list"; index: number }) => {
+  const timeAgo = formatDistanceToNow(new Date(item.createdAt), { addSuffix: true });
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: index * 0.05 }}
+      className={`glass-card rounded-2xl overflow-hidden group hover:neon-glow-sm transition-all duration-300 ${
+        viewMode === "list" ? "flex gap-4 p-4" : ""
+      }`}
+    >
+      {/* Image */}
+      <div className={`bg-secondary/50 flex items-center justify-center ${
+        viewMode === "grid" ? "h-48" : "w-24 h-24 rounded-xl flex-shrink-0"
+      }`}>
+        {item.imageUrls && item.imageUrls.length > 0 ? (
+          <img 
+            src={item.imageUrls[0]} 
+            alt={item.itemName}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <ImageOff className={`text-muted-foreground ${viewMode === "grid" ? "w-16 h-16" : "w-8 h-8"}`} />
+        )}
+      </div>
+
+      {/* Content */}
+      <div className={viewMode === "grid" ? "p-4" : "flex-1"}>
+        <div className="flex items-start justify-between mb-2">
+          <div>
+            <span className={`text-xs px-2 py-0.5 rounded-full ${
+              item.type === "lost" 
+                ? "bg-destructive/20 text-destructive" 
+                : "bg-success/20 text-success"
+            }`}>
+              {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+            </span>
+            {item.matchScore && item.matchScore > 0 && (
+              <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">
+                <Sparkles className="w-3 h-3 inline mr-1" />
+                {item.matchScore}% match
+              </span>
+            )}
+          </div>
+          <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Heart className="w-4 h-4" />
+          </Button>
+        </div>
+
+        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+          {item.itemName}
+        </h3>
+        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+          {item.description}
+        </p>
+
+        <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
+          <span className="flex items-center gap-1">
+            <MapPin className="w-3 h-3" />
+            {item.location}
+          </span>
+          <span className="flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            {timeAgo}
+          </span>
+        </div>
+
+        <Button variant="outline" size="sm" className="w-full gap-2">
+          <Eye className="w-4 h-4" />
+          View Details
+        </Button>
+      </div>
+    </motion.div>
+  );
+};
 
 const Items = () => {
   const [searchParams] = useSearchParams();
@@ -31,11 +100,13 @@ const Items = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showFilters, setShowFilters] = useState(false);
+  
+  const { items, loading, error, refetch } = useItems();
 
-  const filteredItems = mockItems.filter(item => {
-    const matchesType = filterType === "all" || item.type.toLowerCase() === filterType;
+  const filteredItems = items.filter(item => {
+    const matchesType = filterType === "all" || item.type === filterType;
     const matchesCategory = selectedCategory === "All" || item.category === selectedCategory;
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const matchesSearch = item.itemName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          item.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesType && matchesCategory && matchesSearch;
   });
@@ -172,80 +243,38 @@ const Items = () => {
             )}
           </div>
 
+          {/* Loading State */}
+          {loading && (
+            <div className="text-center py-20">
+              <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
+              <p className="text-muted-foreground">Loading items...</p>
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && !loading && (
+            <div className="text-center py-20">
+              <p className="text-destructive mb-4">{error}</p>
+              <Button variant="outline" onClick={refetch}>
+                Try Again
+              </Button>
+            </div>
+          )}
+
           {/* Items Grid */}
-          <div className={viewMode === "grid" 
-            ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" 
-            : "space-y-4"
-          }>
-            {filteredItems.map((item, index) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-                className={`glass-card rounded-2xl overflow-hidden group hover:neon-glow-sm transition-all duration-300 ${
-                  viewMode === "list" ? "flex gap-4 p-4" : ""
-                }`}
-              >
-                {/* Image */}
-                <div className={`bg-secondary/50 flex items-center justify-center ${
-                  viewMode === "grid" ? "h-48" : "w-24 h-24 rounded-xl flex-shrink-0"
-                }`}>
-                  <span className={viewMode === "grid" ? "text-6xl" : "text-4xl"}>{item.image}</span>
-                </div>
-
-                {/* Content */}
-                <div className={viewMode === "grid" ? "p-4" : "flex-1"}>
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${
-                        item.type === "Lost" 
-                          ? "bg-destructive/20 text-destructive" 
-                          : "bg-success/20 text-success"
-                      }`}>
-                        {item.type}
-                      </span>
-                      {item.matchScore > 0 && (
-                        <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">
-                          <Sparkles className="w-3 h-3 inline mr-1" />
-                          {item.matchScore}% match
-                        </span>
-                      )}
-                    </div>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Heart className="w-4 h-4" />
-                    </Button>
-                  </div>
-
-                  <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
-                    {item.name}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                    {item.description}
-                  </p>
-
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
-                    <span className="flex items-center gap-1">
-                      <MapPin className="w-3 h-3" />
-                      {item.location}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {item.date}
-                    </span>
-                  </div>
-
-                  <Button variant="outline" size="sm" className="w-full gap-2">
-                    <Eye className="w-4 h-4" />
-                    View Details
-                  </Button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          {!loading && !error && (
+            <div className={viewMode === "grid" 
+              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" 
+              : "space-y-4"
+            }>
+              {filteredItems.map((item, index) => (
+                <ItemCard key={item.id} item={item} viewMode={viewMode} index={index} />
+              ))}
+            </div>
+          )}
 
           {/* Empty State */}
-          {filteredItems.length === 0 && (
+          {!loading && !error && filteredItems.length === 0 && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -254,7 +283,10 @@ const Items = () => {
               <Search className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="font-display text-xl font-semibold mb-2">No items found</h3>
               <p className="text-muted-foreground mb-4">
-                Try adjusting your search or filter criteria
+                {items.length === 0 
+                  ? "No items have been reported yet. Be the first to report!"
+                  : "Try adjusting your search or filter criteria"
+                }
               </p>
               <Button variant="outline" onClick={() => {
                 setSearchQuery("");
