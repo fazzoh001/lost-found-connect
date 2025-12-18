@@ -1,13 +1,17 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   Upload, MapPin, Calendar, Tag, FileText, Camera, 
-  Sparkles, CheckCircle, AlertCircle 
+  Sparkles, CheckCircle, AlertCircle, Loader2 
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { createItem } from "@/services/itemService";
+import { useToast } from "@/hooks/use-toast";
+import { ItemFormData } from "@/types/item";
 
 const categories = [
   "Electronics", "Bags & Wallets", "Documents", "Keys", "Clothing", 
@@ -16,26 +20,102 @@ const categories = [
 
 const Report = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const initialType = searchParams.get("type") || "lost";
   const [reportType, setReportType] = useState<"lost" | "found">(initialType as "lost" | "found");
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  
+  const [formData, setFormData] = useState<ItemFormData>({
     itemName: "",
     category: "",
     description: "",
     location: "",
     date: "",
-    images: [] as File[],
-    contactEmail: "",
+    images: [],
+    contactEmail: user?.email || "",
     contactPhone: "",
   });
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      if (formData.images.length + newFiles.length > 5) {
+        toast({
+          title: "Too many images",
+          description: "Maximum 5 images allowed",
+          variant: "destructive",
+        });
+        return;
+      }
       setFormData(prev => ({
         ...prev,
-        images: [...prev.images, ...Array.from(e.target.files!)]
+        images: [...prev.images, ...newFiles]
       }));
+    }
+  };
+
+  const validateStep = (): boolean => {
+    if (step === 1) {
+      if (!formData.itemName.trim()) {
+        toast({ title: "Item name is required", variant: "destructive" });
+        return false;
+      }
+      if (!formData.category) {
+        toast({ title: "Please select a category", variant: "destructive" });
+        return false;
+      }
+      if (!formData.description.trim()) {
+        toast({ title: "Description is required", variant: "destructive" });
+        return false;
+      }
+    }
+    if (step === 2) {
+      if (!formData.location.trim()) {
+        toast({ title: "Location is required", variant: "destructive" });
+        return false;
+      }
+      if (!formData.date) {
+        toast({ title: "Date is required", variant: "destructive" });
+        return false;
+      }
+    }
+    if (step === 3) {
+      if (!formData.contactEmail.trim()) {
+        toast({ title: "Email is required", variant: "destructive" });
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleNext = () => {
+    if (validateStep()) {
+      setStep(prev => Math.min(3, prev + 1));
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!validateStep() || !user) return;
+    
+    setIsSubmitting(true);
+    try {
+      await createItem(formData, reportType, user);
+      toast({
+        title: "Report Submitted!",
+        description: `Your ${reportType} item has been reported. We'll notify you of any matches.`,
+      });
+      navigate("/items");
+    } catch (error: any) {
+      toast({
+        title: "Submission Failed",
+        description: error.message || "Could not submit your report. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -316,7 +396,7 @@ const Report = () => {
               <Button
                 variant="outline"
                 onClick={() => setStep(prev => Math.max(1, prev - 1))}
-                disabled={step === 1}
+                disabled={step === 1 || isSubmitting}
               >
                 Previous
               </Button>
@@ -324,14 +404,23 @@ const Report = () => {
               {step < 3 ? (
                 <Button
                   variant="neon"
-                  onClick={() => setStep(prev => Math.min(3, prev + 1))}
+                  onClick={handleNext}
                 >
                   Continue
                 </Button>
               ) : (
-                <Button variant="neon" className="gap-2">
-                  <Sparkles className="w-4 h-4" />
-                  Submit & Find Matches
+                <Button 
+                  variant="neon" 
+                  className="gap-2" 
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-4 h-4" />
+                  )}
+                  {isSubmitting ? "Submitting..." : "Submit & Find Matches"}
                 </Button>
               )}
             </div>
