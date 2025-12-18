@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Zap, Mail, Lock, User, Eye, EyeOff, ArrowRight, Github, Chrome } from "lucide-react";
+import { Zap, Mail, Lock, User, Eye, EyeOff, ArrowRight, Github, Chrome, Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -11,6 +13,106 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const { user, signIn, signUp, signInWithGoogle, signInWithGithub } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  const from = location.state?.from?.pathname || "/dashboard";
+  
+  useEffect(() => {
+    if (user) {
+      navigate(from, { replace: true });
+    }
+  }, [user, navigate, from]);
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    try {
+      if (isLogin) {
+        await signIn(email, password);
+        toast({
+          title: "Welcome back!",
+          description: "You have successfully signed in.",
+        });
+      } else {
+        if (!name.trim()) {
+          toast({
+            title: "Name required",
+            description: "Please enter your full name.",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+        await signUp(email, password, name);
+        toast({
+          title: "Account created!",
+          description: "Welcome to FindIt. Your account has been created.",
+        });
+      }
+    } catch (error: any) {
+      let errorMessage = "Something went wrong. Please try again.";
+      
+      if (error.code === "auth/email-already-in-use") {
+        errorMessage = "This email is already registered. Try signing in.";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "Please enter a valid email address.";
+      } else if (error.code === "auth/weak-password") {
+        errorMessage = "Password should be at least 6 characters.";
+      } else if (error.code === "auth/user-not-found") {
+        errorMessage = "No account found with this email.";
+      } else if (error.code === "auth/wrong-password") {
+        errorMessage = "Incorrect password. Please try again.";
+      } else if (error.code === "auth/invalid-credential") {
+        errorMessage = "Invalid credentials. Please check your email and password.";
+      }
+      
+      toast({
+        title: "Authentication Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+      toast({
+        title: "Welcome!",
+        description: "Signed in with Google successfully.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Google Sign-in Failed",
+        description: error.message || "Could not sign in with Google.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const handleGithubSignIn = async () => {
+    try {
+      await signInWithGithub();
+      toast({
+        title: "Welcome!",
+        description: "Signed in with GitHub successfully.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "GitHub Sign-in Failed",
+        description: error.message || "Could not sign in with GitHub.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden px-4 py-20">
@@ -67,6 +169,7 @@ const Auth = () => {
               exit={{ opacity: 0, x: isLogin ? 20 : -20 }}
               transition={{ duration: 0.3 }}
               className="space-y-5"
+              onSubmit={handleSubmit}
             >
               <div className="text-center mb-6">
                 <h1 className="font-display text-2xl font-bold mb-2">
@@ -131,9 +234,15 @@ const Auth = () => {
                 </div>
               )}
 
-              <Button variant="neon" size="lg" className="w-full group">
-                {isLogin ? "Sign In" : "Create Account"}
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              <Button variant="neon" size="lg" className="w-full group" type="submit" disabled={isLoading}>
+                {isLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    {isLogin ? "Sign In" : "Create Account"}
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
               </Button>
 
               {/* Divider */}
@@ -148,11 +257,11 @@ const Auth = () => {
 
               {/* Social Login */}
               <div className="grid grid-cols-2 gap-3">
-                <Button variant="glass" className="w-full">
+                <Button variant="glass" className="w-full" type="button" onClick={handleGoogleSignIn}>
                   <Chrome className="w-5 h-5" />
                   Google
                 </Button>
-                <Button variant="glass" className="w-full">
+                <Button variant="glass" className="w-full" type="button" onClick={handleGithubSignIn}>
                   <Github className="w-5 h-5" />
                   GitHub
                 </Button>
