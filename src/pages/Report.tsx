@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +10,7 @@ import {
   Sparkles, CheckCircle, AlertCircle, Loader2 
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { createItem } from "@/services/itemService";
+import { createItem, generateItemQRCode } from "@/services/itemService";
 import { useToast } from "@/hooks/use-toast";
 import { ItemFormData } from "@/types/item";
 
@@ -19,6 +20,7 @@ const categories = [
 ];
 
 const Report = () => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const initialType = searchParams.get("type") || "lost";
@@ -60,7 +62,7 @@ const Report = () => {
   const validateStep = (): boolean => {
     if (step === 1) {
       if (!formData.itemName.trim()) {
-        toast({ title: "Item name is required", variant: "destructive" });
+        toast({ title: t("report.itemName") + " required", variant: "destructive" });
         return false;
       }
       if (!formData.category) {
@@ -68,7 +70,7 @@ const Report = () => {
         return false;
       }
       if (!formData.description.trim()) {
-        toast({ title: "Description is required", variant: "destructive" });
+        toast({ title: t("report.description") + " required", variant: "destructive" });
         return false;
       }
     }
@@ -102,15 +104,25 @@ const Report = () => {
     
     setIsSubmitting(true);
     try {
-      await createItem(formData, reportType, user);
+      const itemId = await createItem(
+        formData, 
+        reportType, 
+        user.id,
+        user.email || "",
+        user.user_metadata?.full_name || "Anonymous"
+      );
+      
+      // Generate QR code for the item
+      await generateItemQRCode(itemId);
+      
       toast({
-        title: "Report Submitted!",
-        description: `Your ${reportType} item has been reported. We'll notify you of any matches.`,
+        title: t("report.reportSubmitted"),
+        description: t("report.itemReported", { type: reportType }),
       });
       navigate("/items");
     } catch (error: any) {
       toast({
-        title: "Submission Failed",
+        title: t("report.submissionFailed"),
         description: error.message || "Could not submit your report. Please try again.",
         variant: "destructive",
       });
@@ -139,16 +151,14 @@ const Report = () => {
             }`}>
               {reportType === "lost" ? <AlertCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
               <span className="text-sm font-medium">
-                {reportType === "lost" ? "Report Lost Item" : "Report Found Item"}
+                {reportType === "lost" ? t("report.reportLost") : t("report.reportFound")}
               </span>
             </div>
             <h1 className="font-display text-3xl md:text-4xl font-bold mb-4">
-              {reportType === "lost" ? "Lost Something?" : "Found Something?"}
+              {reportType === "lost" ? t("report.lostSomething") : t("report.foundSomething")}
             </h1>
             <p className="text-muted-foreground">
-              {reportType === "lost" 
-                ? "Provide details about your lost item and our AI will help find matches."
-                : "Help someone find their belongings by reporting what you found."}
+              {reportType === "lost" ? t("report.lostDesc") : t("report.foundDesc")}
             </p>
           </motion.div>
 
@@ -168,7 +178,7 @@ const Report = () => {
               }`}
             >
               <AlertCircle className="w-4 h-4" />
-              Lost Item
+              {t("report.lostItem")}
             </button>
             <button
               onClick={() => setReportType("found")}
@@ -179,7 +189,7 @@ const Report = () => {
               }`}
             >
               <CheckCircle className="w-4 h-4" />
-              Found Item
+              {t("report.foundItem")}
             </button>
           </motion.div>
 
@@ -209,9 +219,9 @@ const Report = () => {
               ))}
             </div>
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Item Details</span>
-              <span>Location & Time</span>
-              <span>Contact Info</span>
+              <span>{t("report.itemDetails")}</span>
+              <span>{t("report.locationTime")}</span>
+              <span>{t("report.contactInfo")}</span>
             </div>
           </motion.div>
 
@@ -226,21 +236,21 @@ const Report = () => {
               <div className="space-y-6">
                 <h2 className="font-display text-xl font-semibold flex items-center gap-2">
                   <Tag className="w-5 h-5 text-primary" />
-                  Item Details
+                  {t("report.itemDetails")}
                 </h2>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Item Name *</label>
+                    <label className="block text-sm font-medium mb-2">{t("report.itemName")} *</label>
                     <Input
-                      placeholder="e.g., iPhone 15 Pro, Blue Backpack..."
+                      placeholder={t("report.itemNamePlaceholder")}
                       value={formData.itemName}
                       onChange={(e) => setFormData(prev => ({ ...prev, itemName: e.target.value }))}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Category *</label>
+                    <label className="block text-sm font-medium mb-2">{t("report.category")} *</label>
                     <div className="grid grid-cols-3 gap-2">
                       {categories.map((cat) => (
                         <button
@@ -259,9 +269,9 @@ const Report = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Description *</label>
+                    <label className="block text-sm font-medium mb-2">{t("report.description")} *</label>
                     <textarea
-                      placeholder="Describe the item in detail (color, brand, unique features, serial number if available...)"
+                      placeholder={t("report.descriptionPlaceholder")}
                       value={formData.description}
                       onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                       className="w-full h-32 rounded-xl border border-border bg-secondary/50 px-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all resize-none"
@@ -271,7 +281,7 @@ const Report = () => {
                   <div>
                     <label className="block text-sm font-medium mb-2">
                       <Camera className="w-4 h-4 inline mr-1" />
-                      Upload Images
+                      {t("report.uploadImages")}
                     </label>
                     <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors">
                       <input
@@ -285,10 +295,10 @@ const Report = () => {
                       <label htmlFor="image-upload" className="cursor-pointer">
                         <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                         <p className="text-sm text-muted-foreground mb-1">
-                          Click to upload or drag and drop
+                          {t("report.clickToUpload")}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          PNG, JPG up to 10MB (Max 5 images)
+                          {t("report.maxImages")}
                         </p>
                       </label>
                     </div>
@@ -310,16 +320,16 @@ const Report = () => {
               <div className="space-y-6">
                 <h2 className="font-display text-xl font-semibold flex items-center gap-2">
                   <MapPin className="w-5 h-5 text-primary" />
-                  Location & Time
+                  {t("report.locationTime")}
                 </h2>
 
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">
-                      {reportType === "lost" ? "Where did you lose it?" : "Where did you find it?"} *
+                      {reportType === "lost" ? t("report.whereLost") : t("report.whereFound")} *
                     </label>
                     <Input
-                      placeholder="e.g., Central Library, Building A Room 101..."
+                      placeholder={t("report.locationPlaceholder")}
                       value={formData.location}
                       onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
                     />
@@ -328,7 +338,7 @@ const Report = () => {
                   <div>
                     <label className="block text-sm font-medium mb-2">
                       <Calendar className="w-4 h-4 inline mr-1" />
-                      Date & Time *
+                      {t("report.dateTime")} *
                     </label>
                     <Input
                       type="datetime-local"
@@ -341,10 +351,9 @@ const Report = () => {
                     <div className="flex items-start gap-3">
                       <Sparkles className="w-5 h-5 text-primary mt-0.5" />
                       <div>
-                        <p className="font-medium text-sm mb-1">AI Location Matching</p>
+                        <p className="font-medium text-sm mb-1">{t("report.aiLocation")}</p>
                         <p className="text-xs text-muted-foreground">
-                          Our AI will use this location data to find items reported nearby, 
-                          increasing your chances of a successful match.
+                          {t("report.aiLocationDesc")}
                         </p>
                       </div>
                     </div>
@@ -357,12 +366,12 @@ const Report = () => {
               <div className="space-y-6">
                 <h2 className="font-display text-xl font-semibold flex items-center gap-2">
                   <FileText className="w-5 h-5 text-primary" />
-                  Contact Information
+                  {t("report.contactInfo")}
                 </h2>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Email Address *</label>
+                    <label className="block text-sm font-medium mb-2">{t("report.emailAddress")} *</label>
                     <Input
                       type="email"
                       placeholder="your@email.com"
@@ -372,10 +381,10 @@ const Report = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Phone Number (Optional)</label>
+                    <label className="block text-sm font-medium mb-2">{t("report.phoneNumber")}</label>
                     <Input
                       type="tel"
-                      placeholder="+1 (555) 123-4567"
+                      placeholder="+255 123 456 789"
                       value={formData.contactPhone}
                       onChange={(e) => setFormData(prev => ({ ...prev, contactPhone: e.target.value }))}
                     />
@@ -383,8 +392,7 @@ const Report = () => {
 
                   <div className="p-4 rounded-xl bg-secondary/50">
                     <p className="text-sm text-muted-foreground">
-                      <span className="font-medium text-foreground">Privacy Note:</span> Your contact information 
-                      will only be shared with verified matches after your approval.
+                      <span className="font-medium text-foreground">{t("report.privacyNote")}</span> {t("report.privacyNoteDesc")}
                     </p>
                   </div>
                 </div>
@@ -398,7 +406,7 @@ const Report = () => {
                 onClick={() => setStep(prev => Math.max(1, prev - 1))}
                 disabled={step === 1 || isSubmitting}
               >
-                Previous
+                {t("report.previous")}
               </Button>
               
               {step < 3 ? (
@@ -406,7 +414,7 @@ const Report = () => {
                   variant="neon"
                   onClick={handleNext}
                 >
-                  Continue
+                  {t("report.continue")}
                 </Button>
               ) : (
                 <Button 
@@ -420,7 +428,7 @@ const Report = () => {
                   ) : (
                     <Sparkles className="w-4 h-4" />
                   )}
-                  {isSubmitting ? "Submitting..." : "Submit & Find Matches"}
+                  {isSubmitting ? t("report.submitting") : t("report.submitAndFind")}
                 </Button>
               )}
             </div>

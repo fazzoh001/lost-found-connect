@@ -1,151 +1,112 @@
-import { 
-  collection, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc, 
-  getDocs, 
-  getDoc,
-  query, 
-  where, 
-  orderBy, 
-  Timestamp,
-  serverTimestamp
-} from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage } from "@/lib/firebase";
+import { supabase } from "@/integrations/supabase/client";
 import { Item, ItemFormData } from "@/types/item";
-import { User } from "firebase/auth";
-
-const ITEMS_COLLECTION = "items";
-
-// Upload images to Firebase Storage
-export const uploadImages = async (files: File[], userId: string): Promise<string[]> => {
-  const urls: string[] = [];
-  
-  for (const file of files) {
-    const timestamp = Date.now();
-    const storageRef = ref(storage, `items/${userId}/${timestamp}_${file.name}`);
-    await uploadBytes(storageRef, file);
-    const url = await getDownloadURL(storageRef);
-    urls.push(url);
-  }
-  
-  return urls;
-};
 
 // Create a new item report
 export const createItem = async (
   formData: ItemFormData, 
   type: "lost" | "found", 
-  user: User
+  userId: string,
+  userEmail: string,
+  userName: string
 ): Promise<string> => {
-  // Upload images first
-  const imageUrls = formData.images.length > 0 
-    ? await uploadImages(formData.images, user.uid) 
-    : [];
+  // For now, we'll skip image upload - can add Supabase storage later
+  const imageUrl = formData.images.length > 0 ? null : null;
 
-  const itemData = {
-    userId: user.uid,
-    userEmail: user.email || "",
-    userName: user.displayName || "Anonymous",
-    type,
-    itemName: formData.itemName,
-    category: formData.category,
-    description: formData.description,
-    location: formData.location,
-    date: formData.date,
-    imageUrls,
-    contactEmail: formData.contactEmail,
-    contactPhone: formData.contactPhone || null,
-    status: "active",
-    matchScore: 0,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  };
+  const { data, error } = await supabase
+    .from("items")
+    .insert({
+      user_id: userId,
+      type,
+      title: formData.itemName,
+      category: formData.category,
+      description: formData.description,
+      location: formData.location,
+      date_occurred: formData.date.split("T")[0], // Extract date part
+      image_url: imageUrl,
+      status: "active",
+    })
+    .select()
+    .single();
 
-  const docRef = await addDoc(collection(db, ITEMS_COLLECTION), itemData);
-  return docRef.id;
+  if (error) throw error;
+  return data.id;
 };
 
 // Get all items
 export const getAllItems = async (): Promise<Item[]> => {
-  const q = query(
-    collection(db, ITEMS_COLLECTION),
-    orderBy("createdAt", "desc")
-  );
-  
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data(),
-    createdAt: doc.data().createdAt?.toDate() || new Date(),
-    updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-  })) as Item[];
+  const { data, error } = await supabase
+    .from("items")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+
+  return (data || []).map(mapDbItemToItem);
 };
 
 // Get items by type (lost or found)
 export const getItemsByType = async (type: "lost" | "found"): Promise<Item[]> => {
-  const q = query(
-    collection(db, ITEMS_COLLECTION),
-    where("type", "==", type),
-    orderBy("createdAt", "desc")
-  );
-  
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data(),
-    createdAt: doc.data().createdAt?.toDate() || new Date(),
-    updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-  })) as Item[];
+  const { data, error } = await supabase
+    .from("items")
+    .select("*")
+    .eq("type", type)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+
+  return (data || []).map(mapDbItemToItem);
 };
 
 // Get items by user
 export const getUserItems = async (userId: string): Promise<Item[]> => {
-  const q = query(
-    collection(db, ITEMS_COLLECTION),
-    where("userId", "==", userId),
-    orderBy("createdAt", "desc")
-  );
-  
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data(),
-    createdAt: doc.data().createdAt?.toDate() || new Date(),
-    updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-  })) as Item[];
+  const { data, error } = await supabase
+    .from("items")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+
+  return (data || []).map(mapDbItemToItem);
 };
 
 // Get single item by ID
 export const getItemById = async (itemId: string): Promise<Item | null> => {
-  const docRef = doc(db, ITEMS_COLLECTION, itemId);
-  const docSnap = await getDoc(docRef);
-  
-  if (!docSnap.exists()) return null;
-  
-  return {
-    id: docSnap.id,
-    ...docSnap.data(),
-    createdAt: docSnap.data().createdAt?.toDate() || new Date(),
-    updatedAt: docSnap.data().updatedAt?.toDate() || new Date(),
-  } as Item;
+  const { data, error } = await supabase
+    .from("items")
+    .select("*")
+    .eq("id", itemId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  return mapDbItemToItem(data);
 };
 
 // Update item
 export const updateItem = async (itemId: string, updates: Partial<Item>): Promise<void> => {
-  const docRef = doc(db, ITEMS_COLLECTION, itemId);
-  await updateDoc(docRef, {
-    ...updates,
-    updatedAt: serverTimestamp(),
-  });
+  const { error } = await supabase
+    .from("items")
+    .update({
+      title: updates.itemName,
+      description: updates.description,
+      location: updates.location,
+      status: updates.status,
+    })
+    .eq("id", itemId);
+
+  if (error) throw error;
 };
 
 // Delete item
 export const deleteItem = async (itemId: string): Promise<void> => {
-  const docRef = doc(db, ITEMS_COLLECTION, itemId);
-  await deleteDoc(docRef);
+  const { error } = await supabase
+    .from("items")
+    .delete()
+    .eq("id", itemId);
+
+  if (error) throw error;
 };
 
 // Update item status
@@ -153,5 +114,48 @@ export const updateItemStatus = async (
   itemId: string, 
   status: "active" | "matched" | "resolved"
 ): Promise<void> => {
-  await updateItem(itemId, { status });
+  const { error } = await supabase
+    .from("items")
+    .update({ status })
+    .eq("id", itemId);
+
+  if (error) throw error;
+};
+
+// Helper to map database item to frontend Item type
+const mapDbItemToItem = (dbItem: any): Item => ({
+  id: dbItem.id,
+  userId: dbItem.user_id,
+  userEmail: "",
+  userName: "",
+  type: dbItem.type,
+  itemName: dbItem.title,
+  category: dbItem.category,
+  description: dbItem.description || "",
+  location: dbItem.location,
+  date: dbItem.date_occurred,
+  imageUrls: dbItem.image_url ? [dbItem.image_url] : [],
+  contactEmail: "",
+  contactPhone: undefined,
+  status: dbItem.status,
+  matchScore: undefined,
+  qrCode: dbItem.qr_code,
+  createdAt: new Date(dbItem.created_at),
+  updatedAt: new Date(dbItem.updated_at),
+});
+
+// Generate QR code data URL for an item
+export const generateItemQRCode = async (itemId: string): Promise<string> => {
+  const baseUrl = window.location.origin;
+  const qrUrl = `${baseUrl}/items/${itemId}`;
+  
+  // Update the item with its QR code URL
+  const { error } = await supabase
+    .from("items")
+    .update({ qr_code: qrUrl })
+    .eq("id", itemId);
+
+  if (error) throw error;
+  
+  return qrUrl;
 };

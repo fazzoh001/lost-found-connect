@@ -53,15 +53,25 @@ export const Navbar = () => {
 
           {/* Actions */}
           <div className="hidden md:flex items-center gap-3">
+            <LanguageSwitcher />
             <Button variant="ghost" size="icon">
               <Search className="w-5 h-5" />
             </Button>
-            <Link to="/auth">
-              <Button variant="outline">Sign In</Button>
-            </Link>
-            <Link to="/report">
-              <Button variant="neon">Report Item</Button>
-            </Link>
+            {user ? (
+              <>
+                <Link to="/report">
+                  <Button variant="neon">{t("nav.reportItem")}</Button>
+                </Link>
+                <Button variant="outline" onClick={signOut}>
+                  <LogOut className="w-4 h-4 mr-1" />
+                  {t("nav.signOut")}
+                </Button>
+              </>
+            ) : (
+              <Link to="/auth">
+                <Button variant="outline">{t("nav.signIn")}</Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
