@@ -44,7 +44,7 @@ export const useUserItems = () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getUserItems(user.uid);
+      const data = await getUserItems(user.id);
       setItems(data);
     } catch (err: any) {
       setError(err.message || "Failed to fetch items");

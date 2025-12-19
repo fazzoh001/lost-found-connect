@@ -12,8 +12,9 @@ export interface Item {
   imageUrls: string[];
   contactEmail: string;
   contactPhone?: string;
-  status: "active" | "matched" | "resolved";
+  status: "active" | "matched" | "resolved" | "closed";
   matchScore?: number;
+  qrCode?: string;
   createdAt: Date;
   updatedAt: Date;
 }

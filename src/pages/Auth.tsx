@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Zap, Mail, Lock, User, Eye, EyeOff, ArrowRight, Github, Chrome, Loader2 } from "lucide-react";
+import { Zap, Mail, Lock, User, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const Auth = () => {
+  const { t } = useTranslation();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -15,7 +18,7 @@ const Auth = () => {
   const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   
-  const { user, signIn, signUp, signInWithGoogle, signInWithGithub } = useAuth();
+  const { user, signIn, signUp } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -34,46 +37,42 @@ const Auth = () => {
     
     try {
       if (isLogin) {
-        await signIn(email, password);
+        const { error } = await signIn(email, password);
+        if (error) throw error;
         toast({
-          title: "Welcome back!",
-          description: "You have successfully signed in.",
+          title: t("auth.welcomeBack"),
+          description: t("auth.signInSuccess"),
         });
       } else {
         if (!name.trim()) {
           toast({
-            title: "Name required",
+            title: t("auth.fullName"),
             description: "Please enter your full name.",
             variant: "destructive",
           });
           setIsLoading(false);
           return;
         }
-        await signUp(email, password, name);
+        const { error } = await signUp(email, password, name);
+        if (error) throw error;
         toast({
-          title: "Account created!",
-          description: "Welcome to FindIt. Your account has been created.",
+          title: t("auth.accountCreated"),
+          description: t("auth.welcomeToFindIt"),
         });
       }
     } catch (error: any) {
       let errorMessage = "Something went wrong. Please try again.";
       
-      if (error.code === "auth/email-already-in-use") {
+      if (error.message?.includes("already registered")) {
         errorMessage = "This email is already registered. Try signing in.";
-      } else if (error.code === "auth/invalid-email") {
-        errorMessage = "Please enter a valid email address.";
-      } else if (error.code === "auth/weak-password") {
-        errorMessage = "Password should be at least 6 characters.";
-      } else if (error.code === "auth/user-not-found") {
-        errorMessage = "No account found with this email.";
-      } else if (error.code === "auth/wrong-password") {
-        errorMessage = "Incorrect password. Please try again.";
-      } else if (error.code === "auth/invalid-credential") {
-        errorMessage = "Invalid credentials. Please check your email and password.";
+      } else if (error.message?.includes("Invalid login")) {
+        errorMessage = "Invalid email or password.";
+      } else if (error.message) {
+        errorMessage = error.message;
       }
       
       toast({
-        title: "Authentication Error",
+        title: t("auth.authError"),
         description: errorMessage,
         variant: "destructive",
       });
@@ -81,41 +80,14 @@ const Auth = () => {
       setIsLoading(false);
     }
   };
-  
-  const handleGoogleSignIn = async () => {
-    try {
-      await signInWithGoogle();
-      toast({
-        title: "Welcome!",
-        description: "Signed in with Google successfully.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Google Sign-in Failed",
-        description: error.message || "Could not sign in with Google.",
-        variant: "destructive",
-      });
-    }
-  };
-  
-  const handleGithubSignIn = async () => {
-    try {
-      await signInWithGithub();
-      toast({
-        title: "Welcome!",
-        description: "Signed in with GitHub successfully.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "GitHub Sign-in Failed",
-        description: error.message || "Could not sign in with GitHub.",
-        variant: "destructive",
-      });
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden px-4 py-20">
+      {/* Language Switcher */}
+      <div className="absolute top-4 right-4 z-20">
+        <LanguageSwitcher />
+      </div>
+      
       {/* Background Effects */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-neon-purple/20 rounded-full blur-[120px] animate-pulse-glow" />
@@ -149,7 +121,7 @@ const Auth = () => {
                 isLogin ? "bg-primary text-primary-foreground shadow-lg" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Sign In
+              {t("auth.signIn")}
             </button>
             <button
               onClick={() => setIsLogin(false)}
@@ -157,7 +129,7 @@ const Auth = () => {
                 !isLogin ? "bg-primary text-primary-foreground shadow-lg" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Sign Up
+              {t("auth.signUp")}
             </button>
           </div>
 
@@ -173,10 +145,10 @@ const Auth = () => {
             >
               <div className="text-center mb-6">
                 <h1 className="font-display text-2xl font-bold mb-2">
-                  {isLogin ? "Welcome Back" : "Create Account"}
+                  {isLogin ? t("auth.welcomeBack") : t("auth.createAccount")}
                 </h1>
                 <p className="text-muted-foreground text-sm">
-                  {isLogin ? "Sign in to continue to your dashboard" : "Join thousands finding their lost items"}
+                  {isLogin ? t("auth.signInToContinue") : t("auth.joinThousands")}
                 </p>
               </div>
 
@@ -185,7 +157,7 @@ const Auth = () => {
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     type="text"
-                    placeholder="Full Name"
+                    placeholder={t("auth.fullName")}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="pl-12"
@@ -197,7 +169,7 @@ const Auth = () => {
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   type="email"
-                  placeholder="Email Address"
+                  placeholder={t("auth.email")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-12"
@@ -208,7 +180,7 @@ const Auth = () => {
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   type={showPassword ? "text" : "password"}
-                  placeholder="Password"
+                  placeholder={t("auth.password")}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-12 pr-12"
@@ -226,10 +198,10 @@ const Auth = () => {
                 <div className="flex items-center justify-between text-sm">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" className="w-4 h-4 rounded border-border bg-secondary" />
-                    <span className="text-muted-foreground">Remember me</span>
+                    <span className="text-muted-foreground">{t("auth.rememberMe")}</span>
                   </label>
                   <Link to="/forgot-password" className="text-primary hover:underline">
-                    Forgot password?
+                    {t("auth.forgotPassword")}
                   </Link>
                 </div>
               )}
@@ -239,45 +211,23 @@ const Auth = () => {
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <>
-                    {isLogin ? "Sign In" : "Create Account"}
+                    {isLogin ? t("auth.signIn") : t("auth.createAccount")}
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
               </Button>
-
-              {/* Divider */}
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-card text-muted-foreground">Or continue with</span>
-                </div>
-              </div>
-
-              {/* Social Login */}
-              <div className="grid grid-cols-2 gap-3">
-                <Button variant="glass" className="w-full" type="button" onClick={handleGoogleSignIn}>
-                  <Chrome className="w-5 h-5" />
-                  Google
-                </Button>
-                <Button variant="glass" className="w-full" type="button" onClick={handleGithubSignIn}>
-                  <Github className="w-5 h-5" />
-                  GitHub
-                </Button>
-              </div>
             </motion.form>
           </AnimatePresence>
         </div>
 
         {/* Footer */}
         <p className="text-center text-sm text-muted-foreground mt-6">
-          {isLogin ? "Don't have an account? " : "Already have an account? "}
+          {isLogin ? t("auth.dontHaveAccount") + " " : t("auth.alreadyHaveAccount") + " "}
           <button
             onClick={() => setIsLogin(!isLogin)}
             className="text-primary hover:underline font-medium"
           >
-            {isLogin ? "Sign Up" : "Sign In"}
+            {isLogin ? t("auth.signUp") : t("auth.signIn")}
           </button>
         </p>
       </motion.div>
