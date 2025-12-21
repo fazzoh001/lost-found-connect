@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -13,9 +14,7 @@ import { useItems } from "@/hooks/useItems";
 import { Item } from "@/types/item";
 import { formatDistanceToNow } from "date-fns";
 
-const categories = ["All", "Electronics", "Bags & Wallets", "Documents", "Keys", "Clothing", "Accessories", "Jewelry", "Books", "Sports Equipment", "Other"];
-
-const ItemCard = ({ item, viewMode, index }: { item: Item; viewMode: "grid" | "list"; index: number }) => {
+const ItemCard = ({ item, viewMode, index, t }: { item: Item; viewMode: "grid" | "list"; index: number; t: any }) => {
   const timeAgo = formatDistanceToNow(new Date(item.createdAt), { addSuffix: true });
   
   return (
@@ -51,12 +50,12 @@ const ItemCard = ({ item, viewMode, index }: { item: Item; viewMode: "grid" | "l
                 ? "bg-destructive/20 text-destructive" 
                 : "bg-success/20 text-success"
             }`}>
-              {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+              {item.type === "lost" ? t("items.lost") : t("items.found")}
             </span>
             {item.matchScore && item.matchScore > 0 && (
               <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">
                 <Sparkles className="w-3 h-3 inline mr-1" />
-                {item.matchScore}% match
+                {item.matchScore}% {t("items.match")}
               </span>
             )}
           </div>
@@ -85,7 +84,7 @@ const ItemCard = ({ item, viewMode, index }: { item: Item; viewMode: "grid" | "l
 
         <Button variant="outline" size="sm" className="w-full gap-2">
           <Eye className="w-4 h-4" />
-          View Details
+          {t("items.viewDetails")}
         </Button>
       </div>
     </motion.div>
@@ -93,6 +92,7 @@ const ItemCard = ({ item, viewMode, index }: { item: Item; viewMode: "grid" | "l
 };
 
 const Items = () => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const initialType = searchParams.get("type") || "all";
   const [filterType, setFilterType] = useState(initialType);
@@ -102,6 +102,20 @@ const Items = () => {
   const [showFilters, setShowFilters] = useState(false);
   
   const { items, loading, error, refetch } = useItems();
+
+  const categories = [
+    { key: "All", label: t("items.all") },
+    { key: "Electronics", label: t("categories.electronics") },
+    { key: "Bags & Wallets", label: t("categories.bagsWallets") },
+    { key: "Documents", label: t("categories.documents") },
+    { key: "Keys", label: t("categories.keys") },
+    { key: "Clothing", label: t("categories.clothing") },
+    { key: "Accessories", label: t("categories.accessories") },
+    { key: "Jewelry", label: t("categories.jewelry") },
+    { key: "Books", label: t("categories.books") },
+    { key: "Sports Equipment", label: t("categories.sportsEquipment") },
+    { key: "Other", label: t("categories.other") },
+  ];
 
   const filteredItems = items.filter(item => {
     const matchesType = filterType === "all" || item.type === filterType;
@@ -125,10 +139,10 @@ const Items = () => {
             className="text-center mb-8"
           >
             <h1 className="font-display text-3xl md:text-4xl font-bold mb-4">
-              Browse <span className="gradient-text">Items</span>
+              {t("items.browseItems").split(" ")[0]} <span className="gradient-text">{t("items.browseItems").split(" ").slice(1).join(" ") || t("items.browseItems")}</span>
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Search through our database of lost and found items. Our AI continuously matches items to help reunite owners with their belongings.
+              {t("items.searchDesc")}
             </p>
           </motion.div>
 
@@ -144,7 +158,7 @@ const Items = () => {
               <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
-                  placeholder="Search items by name, description..."
+                  placeholder={t("items.searchPlaceholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-12"
@@ -153,14 +167,17 @@ const Items = () => {
 
               {/* Type Filter */}
               <div className="flex gap-2">
-                {["all", "lost", "found"].map((type) => (
+                {[
+                  { key: "all", label: t("items.all") },
+                  { key: "lost", label: t("items.lost") },
+                  { key: "found", label: t("items.found") },
+                ].map((type) => (
                   <Button
-                    key={type}
-                    variant={filterType === type ? "default" : "outline"}
-                    onClick={() => setFilterType(type)}
-                    className="capitalize"
+                    key={type.key}
+                    variant={filterType === type.key ? "default" : "outline"}
+                    onClick={() => setFilterType(type.key)}
                   >
-                    {type}
+                    {type.label}
                   </Button>
                 ))}
               </div>
@@ -172,7 +189,7 @@ const Items = () => {
                 className="gap-2"
               >
                 <Filter className="w-4 h-4" />
-                Filters
+                {t("items.filters")}
                 <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? "rotate-180" : ""}`} />
               </Button>
 
@@ -201,19 +218,19 @@ const Items = () => {
                 exit={{ opacity: 0, height: 0 }}
                 className="mt-4 pt-4 border-t border-border"
               >
-                <p className="text-sm font-medium mb-3">Categories</p>
+                <p className="text-sm font-medium mb-3">{t("items.categories")}</p>
                 <div className="flex flex-wrap gap-2">
                   {categories.map((cat) => (
                     <button
-                      key={cat}
-                      onClick={() => setSelectedCategory(cat)}
+                      key={cat.key}
+                      onClick={() => setSelectedCategory(cat.key)}
                       className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                        selectedCategory === cat
+                        selectedCategory === cat.key
                           ? "bg-primary text-primary-foreground"
                           : "bg-secondary hover:bg-secondary/80 text-muted-foreground"
                       }`}
                     >
-                      {cat}
+                      {cat.label}
                     </button>
                   ))}
                 </div>
@@ -224,7 +241,7 @@ const Items = () => {
           {/* Results Count */}
           <div className="flex items-center justify-between mb-6">
             <p className="text-muted-foreground">
-              Showing <span className="font-semibold text-foreground">{filteredItems.length}</span> items
+              {t("items.showingItems", { count: filteredItems.length })}
             </p>
             {(searchQuery || filterType !== "all" || selectedCategory !== "All") && (
               <Button
@@ -238,7 +255,7 @@ const Items = () => {
                 className="gap-1"
               >
                 <X className="w-4 h-4" />
-                Clear filters
+                {t("items.clearFilters")}
               </Button>
             )}
           </div>
@@ -247,7 +264,7 @@ const Items = () => {
           {loading && (
             <div className="text-center py-20">
               <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
-              <p className="text-muted-foreground">Loading items...</p>
+              <p className="text-muted-foreground">{t("items.loading")}</p>
             </div>
           )}
 
@@ -256,7 +273,7 @@ const Items = () => {
             <div className="text-center py-20">
               <p className="text-destructive mb-4">{error}</p>
               <Button variant="outline" onClick={refetch}>
-                Try Again
+                {t("common.reset")}
               </Button>
             </div>
           )}
@@ -268,7 +285,7 @@ const Items = () => {
               : "space-y-4"
             }>
               {filteredItems.map((item, index) => (
-                <ItemCard key={item.id} item={item} viewMode={viewMode} index={index} />
+                <ItemCard key={item.id} item={item} viewMode={viewMode} index={index} t={t} />
               ))}
             </div>
           )}
@@ -281,11 +298,11 @@ const Items = () => {
               className="text-center py-20"
             >
               <Search className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-display text-xl font-semibold mb-2">No items found</h3>
+              <h3 className="font-display text-xl font-semibold mb-2">{t("items.noItems")}</h3>
               <p className="text-muted-foreground mb-4">
                 {items.length === 0 
-                  ? "No items have been reported yet. Be the first to report!"
-                  : "Try adjusting your search or filter criteria"
+                  ? t("items.noItemsYet")
+                  : t("items.adjustFilters")
                 }
               </p>
               <Button variant="outline" onClick={() => {
@@ -293,7 +310,7 @@ const Items = () => {
                 setFilterType("all");
                 setSelectedCategory("All");
               }}>
-                Clear all filters
+                {t("items.clearFilters")}
               </Button>
             </motion.div>
           )}
