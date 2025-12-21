@@ -1,8 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, Menu, X, Zap } from "lucide-react";
+import { Search, Menu, X, Zap, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useAuth } from "@/contexts/AuthContext";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const navLinks = [
   { name: "Home", path: "/" },
@@ -14,6 +17,8 @@ const navLinks = [
 export const Navbar = () => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { t } = useTranslation();
+  const { user, signOut } = useAuth();
 
   return (
     <motion.nav
