@@ -7,18 +7,18 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
-const navLinks = [
-  { name: "Home", path: "/" },
-  { name: "Lost Items", path: "/items?type=lost" },
-  { name: "Found Items", path: "/items?type=found" },
-  { name: "Dashboard", path: "/dashboard" },
-];
-
 export const Navbar = () => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { t } = useTranslation();
   const { user, signOut } = useAuth();
+
+  const navLinks = [
+    { name: t("nav.home"), path: "/" },
+    { name: t("nav.lostItems"), path: "/items?type=lost" },
+    { name: t("nav.foundItems"), path: "/items?type=found" },
+    { name: t("nav.dashboard"), path: "/dashboard" },
+  ];
 
   return (
     <motion.nav
@@ -115,12 +115,26 @@ export const Navbar = () => {
               </Link>
             ))}
             <div className="pt-4 space-y-2">
-              <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="outline" className="w-full">Sign In</Button>
-              </Link>
-              <Link to="/report" onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="neon" className="w-full">Report Item</Button>
-              </Link>
+              {user ? (
+                <>
+                  <Link to="/report" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="neon" className="w-full">{t("nav.reportItem")}</Button>
+                  </Link>
+                  <Button variant="outline" className="w-full" onClick={() => { signOut(); setMobileMenuOpen(false); }}>
+                    <LogOut className="w-4 h-4 mr-1" />
+                    {t("nav.signOut")}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="outline" className="w-full">{t("nav.signIn")}</Button>
+                  </Link>
+                  <Link to="/report" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="neon" className="w-full">{t("nav.reportItem")}</Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </motion.div>

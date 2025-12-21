@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { 
@@ -9,13 +10,6 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-
-const stats = [
-  { label: "Items Reported", value: "24", icon: Package, color: "from-neon-purple to-neon-pink" },
-  { label: "Active Matches", value: "8", icon: Search, color: "from-neon-pink to-neon-blue" },
-  { label: "Notifications", value: "5", icon: Bell, color: "from-neon-blue to-neon-cyan" },
-  { label: "Recovery Rate", value: "87%", icon: TrendingUp, color: "from-neon-cyan to-success" },
-];
 
 const recentItems = [
   { id: 1, name: "iPhone 15 Pro", type: "Lost", location: "Central Library", date: "2 hours ago", status: "Matching", matchScore: 92 },
@@ -31,8 +25,16 @@ const recentMatches = [
 ];
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [profileName, setProfileName] = useState<string | null>(null);
+
+  const stats = [
+    { label: t("dashboard.itemsReported"), value: "24", icon: Package, color: "from-neon-purple to-neon-pink" },
+    { label: t("dashboard.activeMatches"), value: "8", icon: Search, color: "from-neon-pink to-neon-blue" },
+    { label: t("dashboard.notifications"), value: "5", icon: Bell, color: "from-neon-blue to-neon-cyan" },
+    { label: t("dashboard.recoveryRate"), value: "87%", icon: TrendingUp, color: "from-neon-cyan to-success" },
+  ];
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -67,21 +69,21 @@ const Dashboard = () => {
           >
             <div>
               <h1 className="font-display text-3xl md:text-4xl font-bold mb-2">
-                Welcome back, <span className="gradient-text">{profileName || user?.email?.split('@')[0] || 'User'}</span>
+                {t("dashboard.welcomeBack")} <span className="gradient-text">{profileName || user?.email?.split('@')[0] || 'User'}</span>
               </h1>
-              <p className="text-muted-foreground">Here's what's happening with your items today.</p>
+              <p className="text-muted-foreground">{t("dashboard.whatsHappening")}</p>
             </div>
             <div className="flex gap-3 mt-4 md:mt-0">
               <Link to="/report?type=lost">
                 <Button variant="outline">
                   <AlertCircle className="w-4 h-4" />
-                  Report Lost
+                  {t("dashboard.reportLost")}
                 </Button>
               </Link>
               <Link to="/report?type=found">
                 <Button variant="neon">
                   <Plus className="w-4 h-4" />
-                  Report Found
+                  {t("dashboard.reportFound")}
                 </Button>
               </Link>
             </div>
@@ -118,9 +120,9 @@ const Dashboard = () => {
               className="lg:col-span-2 glass-card p-6 rounded-2xl"
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="font-display text-xl font-semibold">Recent Items</h2>
+                <h2 className="font-display text-xl font-semibold">{t("dashboard.recentItems")}</h2>
                 <Link to="/items" className="text-sm text-primary hover:underline flex items-center gap-1">
-                  View All <ArrowRight className="w-4 h-4" />
+                  {t("dashboard.viewAll")} <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
 
@@ -181,9 +183,9 @@ const Dashboard = () => {
               className="glass-card p-6 rounded-2xl"
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="font-display text-xl font-semibold">AI Matches</h2>
+                <h2 className="font-display text-xl font-semibold">{t("dashboard.aiMatches")}</h2>
                 <Link to="/matching" className="text-sm text-primary hover:underline flex items-center gap-1">
-                  View All <ArrowRight className="w-4 h-4" />
+                  {t("dashboard.viewAll")} <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
 
@@ -210,7 +212,7 @@ const Dashboard = () => {
                         {match.status}
                       </span>
                       <Button variant="ghost" size="sm" className="text-xs h-7">
-                        Review
+                        {t("dashboard.review")}
                       </Button>
                     </div>
                   </div>
@@ -219,7 +221,7 @@ const Dashboard = () => {
 
               <Button variant="outline" className="w-full mt-4">
                 <Search className="w-4 h-4" />
-                Run New Match
+                {t("dashboard.runNewMatch")}
               </Button>
             </motion.div>
           </div>

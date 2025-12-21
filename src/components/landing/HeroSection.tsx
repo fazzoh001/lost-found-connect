@@ -1,9 +1,11 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Search, MapPin, Sparkles, ArrowRight } from "lucide-react";
 
 export const HeroSection = () => {
+  const { t } = useTranslation();
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
       {/* Background Effects */}
@@ -26,7 +28,7 @@ export const HeroSection = () => {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-primary/30 mb-8"
           >
             <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium">AI-Powered Lost & Found Platform</span>
+            <span className="text-sm font-medium">{t("hero.badge")}</span>
           </motion.div>
 
           {/* Heading */}
@@ -36,8 +38,8 @@ export const HeroSection = () => {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="font-display text-5xl md:text-7xl font-bold mb-6 leading-tight"
           >
-            Lost Something?{" "}
-            <span className="gradient-text neon-text">We'll Find It</span>
+            {t("hero.title1")}{" "}
+            <span className="gradient-text neon-text">{t("hero.title2")}</span>
           </motion.h1>
 
           {/* Subtitle */}
@@ -47,8 +49,7 @@ export const HeroSection = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto"
           >
-            Advanced AI matching technology helps reunite you with your lost belongings. 
-            Report, search, and recover items with intelligent precision.
+            {t("hero.description")}
           </motion.p>
 
           {/* CTA Buttons */}
@@ -61,14 +62,14 @@ export const HeroSection = () => {
             <Link to="/report">
               <Button variant="neon" size="xl" className="group">
                 <MapPin className="w-5 h-5" />
-                Report Lost Item
+                {t("hero.reportLost")}
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
             <Link to="/items">
               <Button variant="glass" size="xl">
                 <Search className="w-5 h-5" />
-                Browse Found Items
+                {t("hero.browsFound")}
               </Button>
             </Link>
           </motion.div>
@@ -81,9 +82,9 @@ export const HeroSection = () => {
             className="grid grid-cols-3 gap-8 max-w-xl mx-auto"
           >
             {[
-              { value: "10K+", label: "Items Recovered" },
-              { value: "95%", label: "Match Accuracy" },
-              { value: "24/7", label: "AI Monitoring" },
+              { value: "10K+", label: t("hero.stat1") },
+              { value: "95%", label: t("hero.stat2") },
+              { value: "24/7", label: t("hero.stat3") },
             ].map((stat, index) => (
               <div key={index} className="text-center">
                 <div className="font-display text-3xl md:text-4xl font-bold gradient-text">{stat.value}</div>
