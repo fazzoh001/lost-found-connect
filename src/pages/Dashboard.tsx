@@ -4,8 +4,11 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { 
   Package, Search, Bell, TrendingUp, ArrowRight, Plus, 
-  MapPin, Clock, CheckCircle, AlertCircle, Eye 
+  MapPin, Clock, AlertCircle, Eye 
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const stats = [
   { label: "Items Reported", value: "24", icon: Package, color: "from-neon-purple to-neon-pink" },
@@ -28,6 +31,27 @@ const recentMatches = [
 ];
 
 const Dashboard = () => {
+  const { user } = useAuth();
+  const [profileName, setProfileName] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) return;
+      
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      
+      if (data?.full_name) {
+        setProfileName(data.full_name);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -43,7 +67,7 @@ const Dashboard = () => {
           >
             <div>
               <h1 className="font-display text-3xl md:text-4xl font-bold mb-2">
-                Welcome back, <span className="gradient-text">John</span>
+                Welcome back, <span className="gradient-text">{profileName || user?.email?.split('@')[0] || 'User'}</span>
               </h1>
               <p className="text-muted-foreground">Here's what's happening with your items today.</p>
             </div>
