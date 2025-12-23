@@ -1,46 +1,49 @@
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Brain, Zap, Shield, Bell, MapPin, Users } from "lucide-react";
 
-const features = [
-  {
-    icon: Brain,
-    title: "AI-Powered Matching",
-    description: "Our advanced machine learning algorithm analyzes item descriptions, images, and metadata to find the best matches with 95% accuracy.",
-    gradient: "from-neon-purple to-neon-pink",
-  },
-  {
-    icon: Zap,
-    title: "Real-time Notifications",
-    description: "Get instant alerts when a potential match is found. Never miss an opportunity to recover your lost belongings.",
-    gradient: "from-neon-pink to-neon-blue",
-  },
-  {
-    icon: Shield,
-    title: "Secure & Private",
-    description: "Your data is encrypted and protected. We ensure safe communication between finders and owners.",
-    gradient: "from-neon-blue to-neon-cyan",
-  },
-  {
-    icon: MapPin,
-    title: "Location Tracking",
-    description: "GPS-enabled reports help narrow down search areas and improve matching precision based on proximity.",
-    gradient: "from-neon-cyan to-success",
-  },
-  {
-    icon: Bell,
-    title: "Smart Alerts",
-    description: "Set up custom alerts for specific items. We'll notify you immediately when similar items are reported.",
-    gradient: "from-success to-warning",
-  },
-  {
-    icon: Users,
-    title: "Community Driven",
-    description: "Join thousands of users helping each other recover lost items. Together, we make a difference.",
-    gradient: "from-warning to-neon-purple",
-  },
-];
-
 export const FeaturesSection = () => {
+  const { t } = useTranslation();
+
+  const features = [
+    {
+      icon: Brain,
+      titleKey: "features.aiMatching",
+      descKey: "features.aiMatchingDesc",
+      gradient: "from-neon-purple to-neon-pink",
+    },
+    {
+      icon: Zap,
+      titleKey: "features.realtime",
+      descKey: "features.realtimeDesc",
+      gradient: "from-neon-pink to-neon-blue",
+    },
+    {
+      icon: Shield,
+      titleKey: "features.secure",
+      descKey: "features.secureDesc",
+      gradient: "from-neon-blue to-neon-cyan",
+    },
+    {
+      icon: MapPin,
+      titleKey: "features.locationTracking",
+      descKey: "features.locationTrackingDesc",
+      gradient: "from-neon-cyan to-success",
+    },
+    {
+      icon: Bell,
+      titleKey: "features.smartAlerts",
+      descKey: "features.smartAlertsDesc",
+      gradient: "from-success to-warning",
+    },
+    {
+      icon: Users,
+      titleKey: "features.community",
+      descKey: "features.communityDesc",
+      gradient: "from-warning to-neon-purple",
+    },
+  ];
+
   return (
     <section className="py-24 relative overflow-hidden">
       {/* Background */}
@@ -55,12 +58,12 @@ export const FeaturesSection = () => {
           transition={{ duration: 0.5 }}
           className="text-center mb-16"
         >
-          <span className="text-primary font-semibold text-sm uppercase tracking-wider">Features</span>
+          <span className="text-primary font-semibold text-sm uppercase tracking-wider">{t("features.sectionTitle")}</span>
           <h2 className="font-display text-4xl md:text-5xl font-bold mt-4 mb-6">
-            Why Choose <span className="gradient-text">FindIt</span>?
+            {t("features.whyChoose")} <span className="gradient-text">FindIt</span>?
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Experience the future of lost and found with our cutting-edge technology and user-friendly platform.
+            {t("features.whyChooseDesc")}
           </p>
         </motion.div>
 
@@ -79,8 +82,8 @@ export const FeaturesSection = () => {
                 <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300`}>
                   <feature.icon className="w-7 h-7 text-white" />
                 </div>
-                <h3 className="font-display text-xl font-semibold mb-3">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
+                <h3 className="font-display text-xl font-semibold mb-3">{t(feature.titleKey)}</h3>
+                <p className="text-muted-foreground">{t(feature.descKey)}</p>
               </div>
             </motion.div>
           ))}

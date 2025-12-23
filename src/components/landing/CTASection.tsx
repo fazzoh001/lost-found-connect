@@ -1,9 +1,12 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
 
 export const CTASection = () => {
+  const { t } = useTranslation();
+
   return (
     <section className="py-24 relative overflow-hidden">
       {/* Background Effects */}
@@ -28,7 +31,7 @@ export const CTASection = () => {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/20 border border-primary/30 mb-6"
           >
             <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium">Start Your Search Today</span>
+            <span className="text-sm font-medium">{t("cta.badge")}</span>
           </motion.div>
 
           <motion.h2
@@ -38,8 +41,8 @@ export const CTASection = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="font-display text-4xl md:text-5xl font-bold mb-6"
           >
-            Ready to Find Your{" "}
-            <span className="gradient-text">Lost Items</span>?
+            {t("cta.title")}{" "}
+            <span className="gradient-text">{t("cta.titleHighlight")}</span>?
           </motion.h2>
 
           <motion.p
@@ -49,7 +52,7 @@ export const CTASection = () => {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto"
           >
-            Join thousands of users who have successfully recovered their belongings using our AI-powered platform.
+            {t("cta.description")}
           </motion.p>
 
           <motion.div
@@ -61,13 +64,13 @@ export const CTASection = () => {
           >
             <Link to="/auth">
               <Button variant="neon" size="xl" className="group">
-                Get Started Free
+                {t("cta.getStarted")}
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
             <Link to="/items">
               <Button variant="glass" size="xl">
-                Browse Items
+                {t("cta.browseItems")}
               </Button>
             </Link>
           </motion.div>
