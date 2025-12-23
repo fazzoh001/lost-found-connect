@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { 
@@ -89,6 +90,7 @@ const mockMatches = [
 ];
 
 const Matching = () => {
+  const { t } = useTranslation();
   const [selectedMatch, setSelectedMatch] = useState(mockMatches[0]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
@@ -112,13 +114,13 @@ const Matching = () => {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-primary/30 mb-4">
               <Brain className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium">AI-Powered Matching Engine</span>
+              <span className="text-sm font-medium">{t("matching.aiPowered")}</span>
             </div>
             <h1 className="font-display text-3xl md:text-4xl font-bold mb-4">
-              Intelligent <span className="gradient-text">Match Results</span>
+              {t("matching.intelligent")} <span className="gradient-text">{t("matching.matchResults")}</span>
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Our AI analyzes multiple factors to find the best matches between lost and found items with high accuracy.
+              {t("matching.matchDesc")}
             </p>
           </motion.div>
 
@@ -130,10 +132,10 @@ const Matching = () => {
             className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8"
           >
             {[
-              { label: "Total Matches", value: "156", icon: Sparkles },
-              { label: "Avg. Confidence", value: "89%", icon: Brain },
-              { label: "Verified", value: "124", icon: CheckCircle },
-              { label: "Pending Review", value: "32", icon: RefreshCw },
+              { label: t("matching.totalMatches"), value: "156", icon: Sparkles },
+              { label: t("matching.avgConfidence"), value: "89%", icon: Brain },
+              { label: t("matching.verified"), value: "124", icon: CheckCircle },
+              { label: t("matching.pendingReview"), value: "32", icon: RefreshCw },
             ].map((stat, index) => (
               <div key={index} className="glass-card p-4 rounded-xl flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
@@ -156,7 +158,7 @@ const Matching = () => {
               className="glass-card p-6 rounded-2xl"
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="font-display text-xl font-semibold">Recent Matches</h2>
+                <h2 className="font-display text-xl font-semibold">{t("matching.recentMatches")}</h2>
                 <Button variant="outline" size="sm" onClick={runNewAnalysis} disabled={isAnalyzing}>
                   <RefreshCw className={`w-4 h-4 ${isAnalyzing ? "animate-spin" : ""}`} />
                 </Button>
@@ -192,7 +194,7 @@ const Matching = () => {
                           ? "bg-success/20 text-success" 
                           : "bg-warning/20 text-warning"
                       }`}>
-                        {match.status === "verified" ? "Verified" : "Pending Review"}
+                        {match.status === "verified" ? t("matching.verified") : t("matching.pendingReview")}
                       </span>
                     </div>
                   </button>
@@ -211,13 +213,13 @@ const Matching = () => {
               <div className="glass-card p-6 rounded-2xl">
                 <h3 className="font-display text-lg font-semibold mb-6 flex items-center gap-2">
                   <Zap className="w-5 h-5 text-primary" />
-                  Match Comparison
+                  {t("matching.matchComparison")}
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Lost Item */}
                   <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20">
-                    <div className="text-xs font-semibold text-destructive mb-3">LOST ITEM</div>
+                    <div className="text-xs font-semibold text-destructive mb-3">{t("matching.lostItem")}</div>
                     <div className="flex items-center gap-4 mb-3">
                       <div className="w-16 h-16 rounded-xl bg-secondary flex items-center justify-center text-3xl">
                         {selectedMatch.lostItem.image}
@@ -233,7 +235,7 @@ const Matching = () => {
 
                   {/* Found Item */}
                   <div className="p-4 rounded-xl bg-success/10 border border-success/20">
-                    <div className="text-xs font-semibold text-success mb-3">FOUND ITEM</div>
+                    <div className="text-xs font-semibold text-success mb-3">{t("matching.foundItem")}</div>
                     <div className="flex items-center gap-4 mb-3">
                       <div className="w-16 h-16 rounded-xl bg-secondary flex items-center justify-center text-3xl">
                         {selectedMatch.foundItem.image}
@@ -254,7 +256,7 @@ const Matching = () => {
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="font-display text-lg font-semibold flex items-center gap-2">
                     <Brain className="w-5 h-5 text-primary" />
-                    AI Confidence Analysis
+                    {t("matching.confidenceAnalysis")}
                   </h3>
                   <div className={`text-3xl font-bold ${
                     selectedMatch.confidence >= 90 ? "text-success" :
@@ -289,28 +291,28 @@ const Matching = () => {
 
               {/* Actions */}
               <div className="glass-card p-6 rounded-2xl">
-                <h3 className="font-display text-lg font-semibold mb-4">Actions</h3>
+                <h3 className="font-display text-lg font-semibold mb-4">{t("matching.actions")}</h3>
                 <div className="flex flex-wrap gap-3">
                   <Button variant="neon" className="gap-2">
                     <CheckCircle className="w-4 h-4" />
-                    Confirm Match
+                    {t("matching.confirmMatch")}
                   </Button>
                   <Button variant="outline" className="gap-2">
                     <MessageSquare className="w-4 h-4" />
-                    Contact Finder
+                    {t("matching.contactFinder")}
                   </Button>
                   <Button variant="outline" className="gap-2">
                     <XCircle className="w-4 h-4" />
-                    Not a Match
+                    {t("matching.notAMatch")}
                   </Button>
                 </div>
                 <div className="flex gap-4 mt-4 pt-4 border-t border-border">
-                  <p className="text-sm text-muted-foreground">Was this match helpful?</p>
+                  <p className="text-sm text-muted-foreground">{t("matching.wasHelpful")}</p>
                   <Button variant="ghost" size="sm" className="gap-1">
-                    <ThumbsUp className="w-4 h-4" /> Yes
+                    <ThumbsUp className="w-4 h-4" /> {t("matching.yes")}
                   </Button>
                   <Button variant="ghost" size="sm" className="gap-1">
-                    <ThumbsDown className="w-4 h-4" /> No
+                    <ThumbsDown className="w-4 h-4" /> {t("matching.no")}
                   </Button>
                 </div>
               </div>

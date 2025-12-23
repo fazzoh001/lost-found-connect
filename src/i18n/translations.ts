@@ -191,6 +191,7 @@ export const translations = {
       // Matching
       matching: {
         aiPowered: "AI-Powered Matching Engine",
+        intelligent: "Intelligent",
         matchResults: "Match Results",
         matchDesc: "Our AI analyzes multiple factors to find the best matches between lost and found items with high accuracy.",
         totalMatches: "Total Matches",
@@ -208,6 +209,7 @@ export const translations = {
         wasHelpful: "Was this match helpful?",
         yes: "Yes",
         no: "No",
+        actions: "Actions",
       },
       // Admin
       admin: {
@@ -288,6 +290,32 @@ export const translations = {
         en: "English",
         sw: "Kiswahili",
         switchLanguage: "Switch Language",
+      },
+      // Not Found
+      notFound: {
+        title: "404",
+        message: "Oops! Page not found",
+        returnHome: "Return to Home",
+      },
+      // Online Status
+      online: {
+        offline: "You're offline. Some features may be limited.",
+        online: "Online",
+        offlineShort: "Offline",
+      },
+      // Validation
+      validation: {
+        required: "required",
+        selectCategory: "Please select a category",
+        locationRequired: "Location is required",
+        dateRequired: "Date is required",
+        emailRequired: "Email is required",
+        tooManyImages: "Too many images",
+        maxImagesAllowed: "Maximum 5 images allowed",
+        enterFullName: "Please enter your full name.",
+        somethingWrong: "Something went wrong. Please try again.",
+        emailRegistered: "This email is already registered. Try signing in.",
+        invalidCredentials: "Invalid email or password.",
       },
     },
   },
@@ -483,6 +511,7 @@ export const translations = {
       // Matching
       matching: {
         aiPowered: "Injini ya Kulinganisha Inayoendeshwa na AI",
+        intelligent: "Akili",
         matchResults: "Matokeo ya Mechi",
         matchDesc: "AI yetu inachambua mambo mengi kupata mechi bora kati ya vitu vilivyopotea na vilivyopatikana kwa usahihi wa juu.",
         totalMatches: "Mechi Zote",
@@ -500,6 +529,7 @@ export const translations = {
         wasHelpful: "Je, mechi hii ilisaidia?",
         yes: "Ndiyo",
         no: "Hapana",
+        actions: "Vitendo",
       },
       // Admin
       admin: {
@@ -580,6 +610,32 @@ export const translations = {
         en: "English",
         sw: "Kiswahili",
         switchLanguage: "Badilisha Lugha",
+      },
+      // Not Found
+      notFound: {
+        title: "404",
+        message: "Oops! Ukurasa haujapatikana",
+        returnHome: "Rudi Nyumbani",
+      },
+      // Online Status
+      online: {
+        offline: "Huna mtandao. Baadhi ya vipengele vinaweza kuwa na vikwazo.",
+        online: "Mtandaoni",
+        offlineShort: "Nje ya Mtandao",
+      },
+      // Validation
+      validation: {
+        required: "inahitajika",
+        selectCategory: "Tafadhali chagua aina",
+        locationRequired: "Mahali panahitajika",
+        dateRequired: "Tarehe inahitajika",
+        emailRequired: "Barua pepe inahitajika",
+        tooManyImages: "Picha nyingi sana",
+        maxImagesAllowed: "Picha 5 upeo zinakubalika",
+        enterFullName: "Tafadhali ingiza jina lako kamili.",
+        somethingWrong: "Kitu kimekwenda vibaya. Tafadhali jaribu tena.",
+        emailRegistered: "Barua pepe hii imesajiliwa tayari. Jaribu kuingia.",
+        invalidCredentials: "Barua pepe au nenosiri si sahihi.",
       },
     },
   },
