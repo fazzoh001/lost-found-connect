@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,38 +10,48 @@ import {
   Settings, BarChart3, Shield, Bell, Download
 } from "lucide-react";
 
-const stats = [
-  { label: "Total Users", value: "2,847", change: "+12%", icon: Users, color: "from-neon-purple to-neon-pink" },
-  { label: "Total Items", value: "1,234", change: "+8%", icon: Package, color: "from-neon-pink to-neon-blue" },
-  { label: "Matches Made", value: "856", change: "+24%", icon: TrendingUp, color: "from-neon-blue to-neon-cyan" },
-  { label: "Pending Reports", value: "47", change: "-5%", icon: AlertCircle, color: "from-warning to-destructive" },
-];
-
-const recentUsers = [
-  { id: 1, name: "John Doe", email: "john@university.edu", items: 5, joined: "Dec 15, 2024", status: "active" },
-  { id: 2, name: "Jane Smith", email: "jane@university.edu", items: 3, joined: "Dec 14, 2024", status: "active" },
-  { id: 3, name: "Mike Johnson", email: "mike@university.edu", items: 8, joined: "Dec 13, 2024", status: "inactive" },
-  { id: 4, name: "Sarah Williams", email: "sarah@university.edu", items: 2, joined: "Dec 12, 2024", status: "active" },
-  { id: 5, name: "Tom Brown", email: "tom@university.edu", items: 6, joined: "Dec 11, 2024", status: "pending" },
-];
-
-const pendingItems = [
-  { id: 1, name: "iPhone 15 Pro", user: "John Doe", type: "Lost", date: "2 hours ago", status: "pending" },
-  { id: 2, name: "Blue Backpack", user: "Jane Smith", type: "Found", date: "5 hours ago", status: "pending" },
-  { id: 3, name: "MacBook Air", user: "Mike Johnson", type: "Lost", date: "1 day ago", status: "flagged" },
-  { id: 4, name: "Wallet", user: "Sarah Williams", type: "Found", date: "1 day ago", status: "pending" },
-];
-
 const Admin = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const tabs = [
-    { id: "dashboard", label: "Dashboard", icon: BarChart3 },
-    { id: "users", label: "Users", icon: Users },
-    { id: "items", label: "Items", icon: Package },
-    { id: "settings", label: "Settings", icon: Settings },
+  const stats = [
+    { label: t("admin.totalUsers"), value: "2,847", change: "+12%", icon: Users, color: "from-neon-purple to-neon-pink" },
+    { label: t("admin.totalItems"), value: "1,234", change: "+8%", icon: Package, color: "from-neon-pink to-neon-blue" },
+    { label: t("admin.matchesMade"), value: "856", change: "+24%", icon: TrendingUp, color: "from-neon-blue to-neon-cyan" },
+    { label: t("admin.pendingReports"), value: "47", change: "-5%", icon: AlertCircle, color: "from-warning to-destructive" },
   ];
+
+  const recentUsers = [
+    { id: 1, name: "John Doe", email: "john@university.edu", items: 5, joined: "Dec 15, 2024", status: "active" },
+    { id: 2, name: "Jane Smith", email: "jane@university.edu", items: 3, joined: "Dec 14, 2024", status: "active" },
+    { id: 3, name: "Mike Johnson", email: "mike@university.edu", items: 8, joined: "Dec 13, 2024", status: "inactive" },
+    { id: 4, name: "Sarah Williams", email: "sarah@university.edu", items: 2, joined: "Dec 12, 2024", status: "active" },
+    { id: 5, name: "Tom Brown", email: "tom@university.edu", items: 6, joined: "Dec 11, 2024", status: "pending" },
+  ];
+
+  const pendingItems = [
+    { id: 1, name: "iPhone 15 Pro", user: "John Doe", type: "Lost", date: "2 hours ago", status: "pending" },
+    { id: 2, name: "Blue Backpack", user: "Jane Smith", type: "Found", date: "5 hours ago", status: "pending" },
+    { id: 3, name: "MacBook Air", user: "Mike Johnson", type: "Lost", date: "1 day ago", status: "flagged" },
+    { id: 4, name: "Wallet", user: "Sarah Williams", type: "Found", date: "1 day ago", status: "pending" },
+  ];
+
+  const tabs = [
+    { id: "dashboard", label: t("admin.dashboard"), icon: BarChart3 },
+    { id: "users", label: t("admin.users"), icon: Users },
+    { id: "items", label: t("admin.items"), icon: Package },
+    { id: "settings", label: t("admin.settings"), icon: Settings },
+  ];
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "active": return t("admin.active");
+      case "inactive": return t("admin.inactive");
+      case "pending": return t("admin.pending");
+      default: return status;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -58,16 +69,16 @@ const Admin = () => {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Shield className="w-6 h-6 text-primary" />
-                <span className="text-sm font-medium text-primary">Admin Panel</span>
+                <span className="text-sm font-medium text-primary">{t("admin.adminPanel")}</span>
               </div>
               <h1 className="font-display text-3xl md:text-4xl font-bold">
-                System <span className="gradient-text">Overview</span>
+                {t("admin.systemOverview").split(" ")[0]} <span className="gradient-text">{t("admin.systemOverview").split(" ").slice(1).join(" ")}</span>
               </h1>
             </div>
             <div className="flex gap-3 mt-4 md:mt-0">
               <Button variant="outline" className="gap-2">
                 <Download className="w-4 h-4" />
-                Export Data
+                {t("admin.exportData")}
               </Button>
               <Button variant="outline" className="gap-2">
                 <Bell className="w-4 h-4" />
@@ -133,11 +144,11 @@ const Admin = () => {
               className="glass-card p-6 rounded-2xl"
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="font-display text-xl font-semibold">Recent Users</h2>
+                <h2 className="font-display text-xl font-semibold">{t("admin.recentUsers")}</h2>
                 <div className="relative w-64">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search users..."
+                    placeholder={t("admin.searchUsers")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10 h-9"
@@ -149,10 +160,10 @@ const Admin = () => {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">User</th>
-                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Items</th>
-                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Status</th>
-                      <th className="text-right py-3 px-2 text-sm font-medium text-muted-foreground">Actions</th>
+                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">{t("admin.user")}</th>
+                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">{t("admin.items")}</th>
+                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">{t("admin.status")}</th>
+                      <th className="text-right py-3 px-2 text-sm font-medium text-muted-foreground">{t("admin.actions")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -171,7 +182,7 @@ const Admin = () => {
                             user.status === "inactive" ? "bg-muted text-muted-foreground" :
                             "bg-warning/20 text-warning"
                           }`}>
-                            {user.status}
+                            {getStatusLabel(user.status)}
                           </span>
                         </td>
                         <td className="py-3 px-2 text-right">
@@ -194,8 +205,8 @@ const Admin = () => {
               className="glass-card p-6 rounded-2xl"
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="font-display text-xl font-semibold">Pending Approval</h2>
-                <Button variant="outline" size="sm">View All</Button>
+                <h2 className="font-display text-xl font-semibold">{t("admin.pendingApproval")}</h2>
+                <Button variant="outline" size="sm">{t("dashboard.viewAll")}</Button>
               </div>
 
               <div className="space-y-4">
@@ -212,16 +223,16 @@ const Admin = () => {
                             ? "bg-destructive/20 text-destructive" 
                             : "bg-success/20 text-success"
                         }`}>
-                          {item.type}
+                          {item.type === "Lost" ? t("items.lost") : t("items.found")}
                         </span>
                         {item.status === "flagged" && (
                           <span className="text-xs px-2 py-0.5 rounded-full bg-warning/20 text-warning">
-                            Flagged
+                            {t("admin.flagged")}
                           </span>
                         )}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        by {item.user} • {item.date}
+                        {item.user} • {item.date}
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -248,12 +259,12 @@ const Admin = () => {
             transition={{ duration: 0.5, delay: 0.5 }}
             className="glass-card p-6 rounded-2xl mt-6"
           >
-            <h2 className="font-display text-xl font-semibold mb-6">Activity Overview</h2>
+            <h2 className="font-display text-xl font-semibold mb-6">{t("admin.activityOverview")}</h2>
             <div className="h-64 flex items-center justify-center bg-secondary/30 rounded-xl">
               <div className="text-center">
                 <BarChart3 className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">Activity chart will be displayed here</p>
-                <p className="text-sm text-muted-foreground">Connect to database for real data</p>
+                <p className="text-muted-foreground">{t("admin.chartPlaceholder")}</p>
+                <p className="text-sm text-muted-foreground">{t("admin.connectToDatabase")}</p>
               </div>
             </div>
           </motion.div>

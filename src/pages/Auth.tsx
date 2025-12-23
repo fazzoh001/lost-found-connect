@@ -47,7 +47,7 @@ const Auth = () => {
         if (!name.trim()) {
           toast({
             title: t("auth.fullName"),
-            description: "Please enter your full name.",
+            description: t("validation.enterFullName"),
             variant: "destructive",
           });
           setIsLoading(false);
@@ -61,12 +61,12 @@ const Auth = () => {
         });
       }
     } catch (error: any) {
-      let errorMessage = "Something went wrong. Please try again.";
+      let errorMessage = t("validation.somethingWrong");
       
       if (error.message?.includes("already registered")) {
-        errorMessage = "This email is already registered. Try signing in.";
+        errorMessage = t("validation.emailRegistered");
       } else if (error.message?.includes("Invalid login")) {
-        errorMessage = "Invalid email or password.";
+        errorMessage = t("validation.invalidCredentials");
       } else if (error.message) {
         errorMessage = error.message;
       }

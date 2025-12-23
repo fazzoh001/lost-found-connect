@@ -46,8 +46,8 @@ const Report = () => {
       const newFiles = Array.from(e.target.files);
       if (formData.images.length + newFiles.length > 5) {
         toast({
-          title: "Too many images",
-          description: "Maximum 5 images allowed",
+          title: t("validation.tooManyImages"),
+          description: t("validation.maxImagesAllowed"),
           variant: "destructive",
         });
         return;
@@ -62,31 +62,31 @@ const Report = () => {
   const validateStep = (): boolean => {
     if (step === 1) {
       if (!formData.itemName.trim()) {
-        toast({ title: t("report.itemName") + " required", variant: "destructive" });
+        toast({ title: t("report.itemName") + " " + t("validation.required"), variant: "destructive" });
         return false;
       }
       if (!formData.category) {
-        toast({ title: "Please select a category", variant: "destructive" });
+        toast({ title: t("validation.selectCategory"), variant: "destructive" });
         return false;
       }
       if (!formData.description.trim()) {
-        toast({ title: t("report.description") + " required", variant: "destructive" });
+        toast({ title: t("report.description") + " " + t("validation.required"), variant: "destructive" });
         return false;
       }
     }
     if (step === 2) {
       if (!formData.location.trim()) {
-        toast({ title: "Location is required", variant: "destructive" });
+        toast({ title: t("validation.locationRequired"), variant: "destructive" });
         return false;
       }
       if (!formData.date) {
-        toast({ title: "Date is required", variant: "destructive" });
+        toast({ title: t("validation.dateRequired"), variant: "destructive" });
         return false;
       }
     }
     if (step === 3) {
       if (!formData.contactEmail.trim()) {
-        toast({ title: "Email is required", variant: "destructive" });
+        toast({ title: t("validation.emailRequired"), variant: "destructive" });
         return false;
       }
     }
