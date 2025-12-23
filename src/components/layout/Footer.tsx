@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Zap, Github, Twitter, Linkedin, Mail } from "lucide-react";
 
 export const Footer = () => {
+  const { t } = useTranslation();
+
   return (
     <footer className="border-t border-glass-border bg-card/30 backdrop-blur-xl">
       <div className="container mx-auto px-4 py-12">
@@ -17,7 +20,7 @@ export const Footer = () => {
               </span>
             </Link>
             <p className="text-sm text-muted-foreground">
-              AI-powered lost and found platform. Reuniting people with their belongings using intelligent matching.
+              {t("footer.description")}
             </p>
             <div className="flex gap-3">
               <a href="#" className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center hover:bg-primary/20 transition-colors">
@@ -34,29 +37,29 @@ export const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-semibold mb-4">Quick Links</h4>
+            <h4 className="font-semibold mb-4">{t("footer.quickLinks")}</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link to="/items?type=lost" className="hover:text-primary transition-colors">Lost Items</Link></li>
-              <li><Link to="/items?type=found" className="hover:text-primary transition-colors">Found Items</Link></li>
-              <li><Link to="/report" className="hover:text-primary transition-colors">Report Item</Link></li>
-              <li><Link to="/matching" className="hover:text-primary transition-colors">AI Matching</Link></li>
+              <li><Link to="/items?type=lost" className="hover:text-primary transition-colors">{t("footer.lostItems")}</Link></li>
+              <li><Link to="/items?type=found" className="hover:text-primary transition-colors">{t("footer.foundItems")}</Link></li>
+              <li><Link to="/report" className="hover:text-primary transition-colors">{t("footer.reportItem")}</Link></li>
+              <li><Link to="/matching" className="hover:text-primary transition-colors">{t("footer.aiMatching")}</Link></li>
             </ul>
           </div>
 
           {/* Support */}
           <div>
-            <h4 className="font-semibold mb-4">Support</h4>
+            <h4 className="font-semibold mb-4">{t("footer.support")}</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link to="/faq" className="hover:text-primary transition-colors">FAQ</Link></li>
-              <li><Link to="/contact" className="hover:text-primary transition-colors">Contact Us</Link></li>
-              <li><Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link></li>
-              <li><Link to="/terms" className="hover:text-primary transition-colors">Terms of Service</Link></li>
+              <li><Link to="/faq" className="hover:text-primary transition-colors">{t("footer.faq")}</Link></li>
+              <li><Link to="/contact" className="hover:text-primary transition-colors">{t("footer.contactUs")}</Link></li>
+              <li><Link to="/privacy" className="hover:text-primary transition-colors">{t("footer.privacyPolicy")}</Link></li>
+              <li><Link to="/terms" className="hover:text-primary transition-colors">{t("footer.termsOfService")}</Link></li>
             </ul>
           </div>
 
           {/* Contact */}
           <div>
-            <h4 className="font-semibold mb-4">Contact</h4>
+            <h4 className="font-semibold mb-4">{t("footer.contact")}</h4>
             <div className="space-y-3 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-primary" />
@@ -72,7 +75,7 @@ export const Footer = () => {
         </div>
 
         <div className="border-t border-glass-border mt-8 pt-8 text-center text-sm text-muted-foreground">
-          <p>© 2024 FindIt. All rights reserved. Built with ❤️ for ICT Diploma Final Year Project.</p>
+          <p>{t("footer.copyright")}</p>
         </div>
       </div>
     </footer>

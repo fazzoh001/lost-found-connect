@@ -1,34 +1,37 @@
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { FileText, Brain, Bell, Handshake } from "lucide-react";
 
-const steps = [
-  {
-    icon: FileText,
-    title: "Report Your Item",
-    description: "Submit detailed information about your lost or found item including photos, description, and location.",
-    step: "01",
-  },
-  {
-    icon: Brain,
-    title: "AI Analysis",
-    description: "Our intelligent algorithm processes and compares your item against our database in real-time.",
-    step: "02",
-  },
-  {
-    icon: Bell,
-    title: "Get Matched",
-    description: "Receive instant notifications when potential matches are found with confidence scores.",
-    step: "03",
-  },
-  {
-    icon: Handshake,
-    title: "Connect & Recover",
-    description: "Securely communicate with the finder/owner and arrange a safe return of the item.",
-    step: "04",
-  },
-];
-
 export const HowItWorksSection = () => {
+  const { t } = useTranslation();
+
+  const steps = [
+    {
+      icon: FileText,
+      titleKey: "howItWorks.step1Title",
+      descKey: "howItWorks.step1Desc",
+      step: "01",
+    },
+    {
+      icon: Brain,
+      titleKey: "howItWorks.step2Title",
+      descKey: "howItWorks.step2Desc",
+      step: "02",
+    },
+    {
+      icon: Bell,
+      titleKey: "howItWorks.step3Title",
+      descKey: "howItWorks.step3Desc",
+      step: "03",
+    },
+    {
+      icon: Handshake,
+      titleKey: "howItWorks.step4Title",
+      descKey: "howItWorks.step4Desc",
+      step: "04",
+    },
+  ];
+
   return (
     <section className="py-24 relative">
       <div className="container mx-auto px-4">
@@ -40,12 +43,12 @@ export const HowItWorksSection = () => {
           transition={{ duration: 0.5 }}
           className="text-center mb-16"
         >
-          <span className="text-primary font-semibold text-sm uppercase tracking-wider">Process</span>
+          <span className="text-primary font-semibold text-sm uppercase tracking-wider">{t("howItWorks.sectionTitle")}</span>
           <h2 className="font-display text-4xl md:text-5xl font-bold mt-4 mb-6">
-            How It <span className="gradient-text">Works</span>
+            {t("howItWorks.title")} <span className="gradient-text">{t("howItWorks.titleHighlight")}</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Our streamlined process makes finding and recovering items simple and efficient.
+            {t("howItWorks.description")}
           </p>
         </motion.div>
 
@@ -74,8 +77,8 @@ export const HowItWorksSection = () => {
                   <step.icon className="w-10 h-10 text-white" />
                 </div>
 
-                <h3 className="font-display text-xl font-semibold mb-3">{step.title}</h3>
-                <p className="text-muted-foreground">{step.description}</p>
+                <h3 className="font-display text-xl font-semibold mb-3">{t(step.titleKey)}</h3>
+                <p className="text-muted-foreground">{t(step.descKey)}</p>
               </motion.div>
             ))}
           </div>
