@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -82,10 +82,12 @@ const ItemCard = ({ item, viewMode, index, t }: { item: Item; viewMode: "grid" |
           </span>
         </div>
 
-        <Button variant="outline" size="sm" className="w-full gap-2">
-          <Eye className="w-4 h-4" />
-          {t("items.viewDetails")}
-        </Button>
+        <Link to={`/items/${item.id}`}>
+          <Button variant="outline" size="sm" className="w-full gap-2">
+            <Eye className="w-4 h-4" />
+            {t("items.viewDetails")}
+          </Button>
+        </Link>
       </div>
     </motion.div>
   );

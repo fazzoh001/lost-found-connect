@@ -12,6 +12,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Report from "./pages/Report";
 import Items from "./pages/Items";
+import ItemDetail from "./pages/ItemDetail";
 import Matching from "./pages/Matching";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
@@ -40,6 +41,7 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/items" element={<Items />} />
+            <Route path="/items/:id" element={<ItemDetail />} />
             <Route path="/matching" element={
               <ProtectedRoute>
                 <Matching />
