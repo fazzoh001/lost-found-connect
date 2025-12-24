@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -14,9 +15,9 @@ import { createItem, generateItemQRCode } from "@/services/itemService";
 import { useToast } from "@/hooks/use-toast";
 import { ItemFormData } from "@/types/item";
 
-const categories = [
-  "Electronics", "Bags & Wallets", "Documents", "Keys", "Clothing", 
-  "Jewelry", "Books", "Sports Equipment", "Other"
+const categoryKeys = [
+  "electronics", "bagsWallets", "documents", "keys", "clothing", 
+  "jewelry", "books", "sportsEquipment", "other"
 ];
 
 const Report = () => {
@@ -252,17 +253,17 @@ const Report = () => {
                   <div>
                     <label className="block text-sm font-medium mb-2">{t("report.category")} *</label>
                     <div className="grid grid-cols-3 gap-2">
-                      {categories.map((cat) => (
+                      {categoryKeys.map((catKey) => (
                         <button
-                          key={cat}
-                          onClick={() => setFormData(prev => ({ ...prev, category: cat }))}
+                          key={catKey}
+                          onClick={() => setFormData(prev => ({ ...prev, category: catKey }))}
                           className={`p-3 rounded-xl text-sm font-medium transition-all ${
-                            formData.category === cat
+                            formData.category === catKey
                               ? "bg-primary text-primary-foreground"
                               : "bg-secondary hover:bg-secondary/80 text-muted-foreground"
                           }`}
                         >
-                          {cat}
+                          {t(`categories.${catKey}`)}
                         </button>
                       ))}
                     </div>
@@ -435,6 +436,8 @@ const Report = () => {
           </motion.div>
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 };

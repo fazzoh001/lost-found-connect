@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { 
   Package, Search, Bell, TrendingUp, ArrowRight, Plus, 
@@ -227,6 +228,8 @@ const Dashboard = () => {
           </div>
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 };

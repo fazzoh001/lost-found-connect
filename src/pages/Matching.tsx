@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { 
   Brain, Sparkles, ArrowRight, CheckCircle, XCircle, 
@@ -320,6 +321,8 @@ const Matching = () => {
           </div>
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 };
