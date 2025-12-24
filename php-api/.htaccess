@@ -1,0 +1,15 @@
+# Enable URL rewriting
+RewriteEngine On
+
+# Handle authorization header
+SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+
+# Allow direct access to PHP files
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Route API requests
+RewriteRule ^api/(.*)$ api/$1 [L]
+
+# Allow access to uploads
+RewriteRule ^uploads/(.*)$ uploads/$1 [L]
