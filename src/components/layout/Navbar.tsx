@@ -4,7 +4,7 @@ import { Search, Menu, X, Zap, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/PhpAuthContext";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 export const Navbar = () => {

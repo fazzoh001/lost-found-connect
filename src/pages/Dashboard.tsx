@@ -8,9 +8,8 @@ import {
   Package, Search, Bell, TrendingUp, ArrowRight, Plus, 
   MapPin, Clock, AlertCircle, Eye 
 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/PhpAuthContext";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 
 const recentItems = [
   { id: 1, name: "iPhone 15 Pro", type: "Lost", location: "Central Library", date: "2 hours ago", status: "Matching", matchScore: 92 },
@@ -38,21 +37,10 @@ const Dashboard = () => {
   ];
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (!user) return;
-      
-      const { data } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      
-      if (data?.full_name) {
-        setProfileName(data.full_name);
-      }
-    };
-
-    fetchProfile();
+    // Profile name comes from the user object in PHP auth
+    if (user?.full_name) {
+      setProfileName(user.full_name);
+    }
   }, [user]);
 
   return (
