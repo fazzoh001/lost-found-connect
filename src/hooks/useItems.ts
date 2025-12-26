@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Item } from "@/types/item";
-import { getAllItems, getUserItems, getItemsByType } from "@/services/itemService";
-import { useAuth } from "@/contexts/AuthContext";
+import { getAllItems, getUserItems, getItemsByType } from "@/services/phpItemService";
+import { useAuth } from "@/contexts/PhpAuthContext";
 
 export const useItems = () => {
   const [items, setItems] = useState<Item[]>([]);

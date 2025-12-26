@@ -9,7 +9,7 @@ import {
   ArrowLeft, MapPin, Calendar, Tag, User, Mail, Phone,
   AlertCircle, CheckCircle, Loader2, ImageOff, Share2
 } from "lucide-react";
-import { getItemById } from "@/services/itemService";
+import { getItemById } from "@/services/phpItemService";
 import { Item } from "@/types/item";
 import { formatDistanceToNow, format } from "date-fns";
 import { ItemQRCode } from "@/components/ItemQRCode";

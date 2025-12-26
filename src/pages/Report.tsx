@@ -10,8 +10,8 @@ import {
   Upload, MapPin, Calendar, Tag, FileText, Camera, 
   Sparkles, CheckCircle, AlertCircle, Loader2 
 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { createItem, generateItemQRCode } from "@/services/itemService";
+import { useAuth } from "@/contexts/PhpAuthContext";
+import { createItem, generateItemQRCode } from "@/services/phpItemService";
 import { useToast } from "@/hooks/use-toast";
 import { ItemFormData } from "@/types/item";
 
@@ -110,7 +110,7 @@ const Report = () => {
         reportType, 
         user.id,
         user.email || "",
-        user.user_metadata?.full_name || "Anonymous"
+        user.full_name || "Anonymous"
       );
       
       // Generate QR code for the item
