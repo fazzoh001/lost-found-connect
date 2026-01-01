@@ -4,10 +4,43 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Zap, Mail, Lock, User, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
+import { Zap, Mail, Lock, User, Eye, EyeOff, ArrowRight, Loader2, Smartphone, Key, Wallet, Package, MapPin } from "lucide-react";
 import { useAuth } from "@/contexts/PhpAuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+
+// Floating icons for decoration
+const floatingIcons = [
+  { Icon: Smartphone, delay: 0, x: "10%", y: "20%" },
+  { Icon: Key, delay: 0.5, x: "85%", y: "15%" },
+  { Icon: Wallet, delay: 1, x: "15%", y: "75%" },
+  { Icon: Package, delay: 1.5, x: "80%", y: "70%" },
+  { Icon: MapPin, delay: 2, x: "5%", y: "45%" },
+  { Icon: Zap, delay: 2.5, x: "90%", y: "45%" },
+];
+
+const FloatingIcon = ({ Icon, delay, x, y }: { Icon: any; delay: number; x: string; y: string }) => (
+  <motion.div
+    initial={{ opacity: 0, scale: 0 }}
+    animate={{ 
+      opacity: [0.1, 0.3, 0.1],
+      scale: [0.8, 1, 0.8],
+      y: [0, -20, 0],
+    }}
+    transition={{
+      duration: 4,
+      delay,
+      repeat: Infinity,
+      ease: "easeInOut",
+    }}
+    className="absolute pointer-events-none"
+    style={{ left: x, top: y }}
+  >
+    <div className="w-12 h-12 rounded-xl bg-primary/10 backdrop-blur-sm flex items-center justify-center border border-primary/20">
+      <Icon className="w-6 h-6 text-primary/50" />
+    </div>
+  </motion.div>
+);
 
 const Auth = () => {
   const { t } = useTranslation();
@@ -92,10 +125,40 @@ const Auth = () => {
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-neon-purple/20 rounded-full blur-[120px] animate-pulse-glow" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-neon-pink/20 rounded-full blur-[120px] animate-pulse-glow" style={{ animationDelay: "1s" }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-neon-blue/10 rounded-full blur-[150px]" />
       </div>
+
+      {/* Floating Icons */}
+      {floatingIcons.map((item, index) => (
+        <FloatingIcon key={index} {...item} />
+      ))}
 
       {/* Grid Pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(139,92,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(139,92,246,0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
+
+      {/* Animated particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(20)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-primary/30 rounded-full"
+            initial={{
+              x: Math.random() * window.innerWidth,
+              y: window.innerHeight + 10,
+            }}
+            animate={{
+              y: -10,
+              opacity: [0, 1, 0],
+            }}
+            transition={{
+              duration: Math.random() * 10 + 10,
+              repeat: Infinity,
+              delay: Math.random() * 10,
+              ease: "linear",
+            }}
+          />
+        ))}
+      </div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
