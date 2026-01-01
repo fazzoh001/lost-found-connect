@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { Navbar } from "@/components/layout/Navbar";
@@ -6,98 +6,113 @@ import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { 
   Brain, Sparkles, ArrowRight, CheckCircle, XCircle, 
-  MessageSquare, RefreshCw, ThumbsUp, ThumbsDown, Zap 
+  MessageSquare, RefreshCw, ThumbsUp, ThumbsDown, Zap, Loader2
 } from "lucide-react";
+import { matchesApi } from "@/services/api";
+import { useAuth } from "@/contexts/PhpAuthContext";
 
-const mockMatches = [
-  {
-    id: 1,
-    lostItem: {
-      name: "iPhone 15 Pro Max",
-      description: "Space Black, 256GB with clear case and cracked screen protector",
-      location: "Central Library",
-      date: "Dec 15, 2024",
-      image: "📱",
-    },
-    foundItem: {
-      name: "Black iPhone Found",
-      description: "Large iPhone, black color, has a clear protective case",
-      location: "Library Study Room 3",
-      date: "Dec 16, 2024",
-      image: "📱",
-    },
-    confidence: 94,
-    factors: [
-      { name: "Device Type", score: 100 },
-      { name: "Color Match", score: 95 },
-      { name: "Location Proximity", score: 90 },
-      { name: "Description Similarity", score: 88 },
-      { name: "Time Frame", score: 95 },
-    ],
-    status: "pending",
-  },
-  {
-    id: 2,
-    lostItem: {
-      name: "Blue Nike Backpack",
-      description: "Navy blue with white swoosh, contains textbooks and laptop",
-      location: "Student Center",
-      date: "Dec 14, 2024",
-      image: "🎒",
-    },
-    foundItem: {
-      name: "Navy Sports Bag",
-      description: "Dark blue backpack, Nike brand, found with books inside",
-      location: "Student Center Cafeteria",
-      date: "Dec 14, 2024",
-      image: "🎒",
-    },
-    confidence: 91,
-    factors: [
-      { name: "Item Type", score: 100 },
-      { name: "Brand Match", score: 100 },
-      { name: "Color Match", score: 85 },
-      { name: "Location Proximity", score: 95 },
-      { name: "Contents Match", score: 80 },
-    ],
-    status: "pending",
-  },
-  {
-    id: 3,
-    lostItem: {
-      name: "Toyota Car Keys",
-      description: "Black key fob with gym membership tag attached",
-      location: "Parking Lot B",
-      date: "Dec 13, 2024",
-      image: "🔑",
-    },
-    foundItem: {
-      name: "Car Keys with Tag",
-      description: "Toyota key fob, has a blue keychain tag",
-      location: "Parking Lot B - Row 5",
-      date: "Dec 13, 2024",
-      image: "🔑",
-    },
-    confidence: 97,
-    factors: [
-      { name: "Item Type", score: 100 },
-      { name: "Brand Match", score: 100 },
-      { name: "Location Match", score: 98 },
-      { name: "Time Match", score: 100 },
-      { name: "Accessory Match", score: 85 },
-    ],
-    status: "verified",
-  },
-];
+interface MatchItem {
+  id: string;
+  lostItem: {
+    name: string;
+    description: string;
+    location: string;
+    date: string;
+    image: string;
+  };
+  foundItem: {
+    name: string;
+    description: string;
+    location: string;
+    date: string;
+    image: string;
+  };
+  confidence: number;
+  factors: { name: string; score: number }[];
+  status: string;
+}
+
+const getItemEmoji = (category: string): string => {
+  const emojiMap: Record<string, string> = {
+    electronics: "📱",
+    "bags & wallets": "👜",
+    documents: "📄",
+    keys: "🔑",
+    clothing: "👕",
+    accessories: "⌚",
+    jewelry: "💍",
+    books: "📚",
+    "sports equipment": "⚽",
+    other: "📦"
+  };
+  return emojiMap[category?.toLowerCase()] || "📦";
+};
 
 const Matching = () => {
   const { t } = useTranslation();
-  const [selectedMatch, setSelectedMatch] = useState(mockMatches[0]);
+  const { user } = useAuth();
+  const [matches, setMatches] = useState<MatchItem[]>([]);
+  const [selectedMatch, setSelectedMatch] = useState<MatchItem | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchMatches = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const data = await matchesApi.getAll();
+      
+      // Transform API data to match component format
+      const transformedMatches: MatchItem[] = (data || []).map((match: any) => ({
+        id: match.id,
+        lostItem: {
+          name: match.lost_item?.title || "Lost Item",
+          description: match.lost_item?.description || "",
+          location: match.lost_item?.location || "",
+          date: match.lost_item?.date_occurred || "",
+          image: getItemEmoji(match.lost_item?.category),
+        },
+        foundItem: {
+          name: match.found_item?.title || "Found Item",
+          description: match.found_item?.description || "",
+          location: match.found_item?.location || "",
+          date: match.found_item?.date_occurred || "",
+          image: getItemEmoji(match.found_item?.category),
+        },
+        confidence: Math.round(match.match_score * 100) || 0,
+        factors: [
+          { name: "Category Match", score: match.lost_item?.category === match.found_item?.category ? 100 : 50 },
+          { name: "Location Proximity", score: 85 },
+          { name: "Time Frame", score: 90 },
+          { name: "Description Similarity", score: Math.round(match.match_score * 100) || 0 },
+        ],
+        status: match.status || "pending",
+      }));
+      
+      setMatches(transformedMatches);
+      if (transformedMatches.length > 0) {
+        setSelectedMatch(transformedMatches[0]);
+      }
+    } catch (err) {
+      setError("Failed to load matches");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMatches();
+  }, [user]);
 
   const runNewAnalysis = () => {
     setIsAnalyzing(true);
-    setTimeout(() => setIsAnalyzing(false), 2000);
+    fetchMatches().finally(() => setIsAnalyzing(false));
   };
 
   return (
@@ -165,45 +180,57 @@ const Matching = () => {
                 </Button>
               </div>
 
-              <div className="space-y-3">
-                {mockMatches.map((match) => (
-                  <button
-                    key={match.id}
-                    onClick={() => setSelectedMatch(match)}
-                    className={`w-full p-4 rounded-xl text-left transition-all ${
-                      selectedMatch.id === match.id
-                        ? "bg-primary/20 border border-primary/50"
-                        : "bg-secondary/30 hover:bg-secondary/50"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium truncate">{match.lostItem.name}</span>
-                      <span className={`text-lg font-bold ${
-                        match.confidence >= 90 ? "text-success" :
-                        match.confidence >= 70 ? "text-warning" : "text-destructive"
-                      }`}>
-                        {match.confidence}%
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <ArrowRight className="w-3 h-3" />
-                      <span className="truncate">{match.foundItem.name}</span>
-                    </div>
-                    <div className="mt-2">
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        match.status === "verified" 
-                          ? "bg-success/20 text-success" 
-                          : "bg-warning/20 text-warning"
-                      }`}>
-                        {match.status === "verified" ? t("matching.verified") : t("matching.pendingReview")}
-                      </span>
-                    </div>
-                  </button>
-                ))}
-              </div>
+              {loading ? (
+                <div className="flex items-center justify-center py-10">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+              ) : matches.length === 0 ? (
+                <div className="text-center py-10 text-muted-foreground">
+                  <Brain className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>{t("matching.noMatches")}</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {matches.map((match) => (
+                    <button
+                      key={match.id}
+                      onClick={() => setSelectedMatch(match)}
+                      className={`w-full p-4 rounded-xl text-left transition-all ${
+                        selectedMatch?.id === match.id
+                          ? "bg-primary/20 border border-primary/50"
+                          : "bg-secondary/30 hover:bg-secondary/50"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium truncate">{match.lostItem.name}</span>
+                        <span className={`text-lg font-bold ${
+                          match.confidence >= 90 ? "text-success" :
+                          match.confidence >= 70 ? "text-warning" : "text-destructive"
+                        }`}>
+                          {match.confidence}%
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <ArrowRight className="w-3 h-3" />
+                        <span className="truncate">{match.foundItem.name}</span>
+                      </div>
+                      <div className="mt-2">
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          match.status === "verified" 
+                            ? "bg-success/20 text-success" 
+                            : "bg-warning/20 text-warning"
+                        }`}>
+                          {match.status === "verified" ? t("matching.verified") : t("matching.pendingReview")}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </motion.div>
 
             {/* Match Details */}
+            {selectedMatch ? (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -318,6 +345,18 @@ const Matching = () => {
                 </div>
               </div>
             </motion.div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="lg:col-span-2 glass-card p-12 rounded-2xl flex items-center justify-center"
+              >
+                <div className="text-center text-muted-foreground">
+                  <Brain className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                  <p>{t("matching.selectMatch")}</p>
+                </div>
+              </motion.div>
+            )}
           </div>
         </div>
       </main>
