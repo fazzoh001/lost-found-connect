@@ -210,6 +210,8 @@ export const translations = {
         yes: "Yes",
         no: "No",
         actions: "Actions",
+        noMatches: "No matches found yet. Report items to get AI-powered matches.",
+        selectMatch: "Select a match from the list to view details",
       },
       // Admin
       admin: {
@@ -530,6 +532,8 @@ export const translations = {
         yes: "Ndiyo",
         no: "Hapana",
         actions: "Vitendo",
+        noMatches: "Hakuna mechi zilizopatikana bado. Ripoti vitu kupata mechi za AI.",
+        selectMatch: "Chagua mechi kutoka orodha kuona maelezo",
       },
       // Admin
       admin: {
