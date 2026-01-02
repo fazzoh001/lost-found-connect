@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { Navbar } from "@/components/layout/Navbar";
@@ -7,35 +7,106 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   Users, Package, TrendingUp, AlertCircle, Search, 
-  MoreVertical, CheckCircle, XCircle, Eye, Trash2,
+  MoreVertical, CheckCircle, XCircle, Eye, Loader2,
   Settings, BarChart3, Shield, Bell, Download
 } from "lucide-react";
+import { itemsApi, matchesApi } from "@/services/api";
+import { useToast } from "@/hooks/use-toast";
+import { formatDistanceToNow } from "date-fns";
+
+interface AdminItem {
+  id: string;
+  title: string;
+  type: "lost" | "found";
+  status: string;
+  user_name?: string;
+  user_email?: string;
+  created_at: string;
+}
 
 const Admin = () => {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [allItems, setAllItems] = useState<AdminItem[]>([]);
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalItems: 0,
+    matchesMade: 0,
+    pendingReports: 0
+  });
 
-  const stats = [
-    { label: t("admin.totalUsers"), value: "2,847", change: "+12%", icon: Users, color: "from-neon-purple to-neon-pink" },
-    { label: t("admin.totalItems"), value: "1,234", change: "+8%", icon: Package, color: "from-neon-pink to-neon-blue" },
-    { label: t("admin.matchesMade"), value: "856", change: "+24%", icon: TrendingUp, color: "from-neon-blue to-neon-cyan" },
-    { label: t("admin.pendingReports"), value: "47", change: "-5%", icon: AlertCircle, color: "from-warning to-destructive" },
-  ];
+  useEffect(() => {
+    fetchAdminData();
+  }, []);
 
-  const recentUsers = [
-    { id: 1, name: "John Doe", email: "john@university.edu", items: 5, joined: "Dec 15, 2024", status: "active" },
-    { id: 2, name: "Jane Smith", email: "jane@university.edu", items: 3, joined: "Dec 14, 2024", status: "active" },
-    { id: 3, name: "Mike Johnson", email: "mike@university.edu", items: 8, joined: "Dec 13, 2024", status: "inactive" },
-    { id: 4, name: "Sarah Williams", email: "sarah@university.edu", items: 2, joined: "Dec 12, 2024", status: "active" },
-    { id: 5, name: "Tom Brown", email: "tom@university.edu", items: 6, joined: "Dec 11, 2024", status: "pending" },
-  ];
+  const fetchAdminData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch all items
+      const itemsData = await itemsApi.getAll();
+      const items: AdminItem[] = Array.isArray(itemsData) ? itemsData : [];
+      setAllItems(items);
 
-  const pendingItems = [
-    { id: 1, name: "iPhone 15 Pro", user: "John Doe", type: "Lost", date: "2 hours ago", status: "pending" },
-    { id: 2, name: "Blue Backpack", user: "Jane Smith", type: "Found", date: "5 hours ago", status: "pending" },
-    { id: 3, name: "MacBook Air", user: "Mike Johnson", type: "Lost", date: "1 day ago", status: "flagged" },
-    { id: 4, name: "Wallet", user: "Sarah Williams", type: "Found", date: "1 day ago", status: "pending" },
+      // Calculate stats from items
+      const uniqueUsers = new Set(items.map((i: AdminItem) => i.user_email)).size;
+      const pendingItems = items.filter((i: AdminItem) => i.status === "active").length;
+      
+      // Fetch matches
+      let matchCount = 0;
+      try {
+        const matchesData = await matchesApi.getAll();
+        matchCount = Array.isArray(matchesData) ? matchesData.length : 0;
+      } catch {
+        // Matches API might fail
+      }
+
+      setStats({
+        totalUsers: uniqueUsers,
+        totalItems: items.length,
+        matchesMade: matchCount,
+        pendingReports: pendingItems
+      });
+    } catch (error) {
+      console.error("Failed to fetch admin data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load admin data",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApproveItem = async (itemId: string) => {
+    try {
+      await itemsApi.update(itemId, { status: "active" });
+      toast({ title: "Success", description: "Item approved" });
+      fetchAdminData();
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to approve item", variant: "destructive" });
+    }
+  };
+
+  const handleRejectItem = async (itemId: string) => {
+    try {
+      await itemsApi.delete(itemId);
+      toast({ title: "Success", description: "Item rejected and removed" });
+      fetchAdminData();
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to reject item", variant: "destructive" });
+    }
+  };
+
+  const statCards = [
+    { label: t("admin.totalUsers"), value: stats.totalUsers.toString(), change: "+12%", icon: Users, color: "from-neon-purple to-neon-pink" },
+    { label: t("admin.totalItems"), value: stats.totalItems.toString(), change: "+8%", icon: Package, color: "from-neon-pink to-neon-blue" },
+    { label: t("admin.matchesMade"), value: stats.matchesMade.toString(), change: "+24%", icon: TrendingUp, color: "from-neon-blue to-neon-cyan" },
+    { label: t("admin.pendingReports"), value: stats.pendingReports.toString(), change: "-5%", icon: AlertCircle, color: "from-warning to-destructive" },
   ];
 
   const tabs = [
@@ -45,14 +116,34 @@ const Admin = () => {
     { id: "settings", label: t("admin.settings"), icon: Settings },
   ];
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case "active": return t("admin.active");
-      case "inactive": return t("admin.inactive");
-      case "pending": return t("admin.pending");
-      default: return status;
+  const getTimeAgo = (dateString: string) => {
+    try {
+      return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+    } catch {
+      return dateString;
     }
   };
+
+  // Filter items based on search
+  const filteredItems = allItems.filter(item => 
+    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.user_email?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Get unique users from items
+  const uniqueUsers = Array.from(
+    new Map(
+      allItems.map(item => [item.user_email, {
+        email: item.user_email || "Unknown",
+        name: item.user_name || item.user_email?.split("@")[0] || "Unknown",
+        itemCount: allItems.filter(i => i.user_email === item.user_email).length,
+        status: "active"
+      }])
+    ).values()
+  );
+
+  // Get pending items (active status)
+  const pendingItems = allItems.filter(item => item.status === "active").slice(0, 4);
 
   return (
     <div className="min-h-screen bg-background">
@@ -83,7 +174,9 @@ const Admin = () => {
               </Button>
               <Button variant="outline" className="gap-2">
                 <Bell className="w-4 h-4" />
-                <span className="w-2 h-2 rounded-full bg-destructive" />
+                {stats.pendingReports > 0 && (
+                  <span className="w-2 h-2 rounded-full bg-destructive" />
+                )}
               </Button>
             </div>
           </motion.div>
@@ -108,167 +201,194 @@ const Admin = () => {
             ))}
           </motion.div>
 
-          {/* Stats */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
-          >
-            {stats.map((stat, index) => (
-              <div
-                key={stat.label}
-                className="glass-card p-6 rounded-2xl group hover:neon-glow-sm transition-all duration-300"
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <>
+              {/* Stats */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
               >
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                    <stat.icon className="w-6 h-6 text-white" />
-                  </div>
-                  <span className={`text-sm font-medium ${
-                    stat.change.startsWith("+") ? "text-success" : "text-destructive"
-                  }`}>
-                    {stat.change}
-                  </span>
-                </div>
-                <div className="font-display text-3xl font-bold mb-1">{stat.value}</div>
-                <div className="text-sm text-muted-foreground">{stat.label}</div>
-              </div>
-            ))}
-          </motion.div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Users Table */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="glass-card p-6 rounded-2xl"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="font-display text-xl font-semibold">{t("admin.recentUsers")}</h2>
-                <div className="relative w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder={t("admin.searchUsers")}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 h-9"
-                  />
-                </div>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">{t("admin.user")}</th>
-                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">{t("admin.items")}</th>
-                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">{t("admin.status")}</th>
-                      <th className="text-right py-3 px-2 text-sm font-medium text-muted-foreground">{t("admin.actions")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentUsers.map((user) => (
-                      <tr key={user.id} className="border-b border-border/50 hover:bg-secondary/30">
-                        <td className="py-3 px-2">
-                          <div>
-                            <div className="font-medium">{user.name}</div>
-                            <div className="text-sm text-muted-foreground">{user.email}</div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-2">{user.items}</td>
-                        <td className="py-3 px-2">
-                          <span className={`text-xs px-2 py-1 rounded-full ${
-                            user.status === "active" ? "bg-success/20 text-success" :
-                            user.status === "inactive" ? "bg-muted text-muted-foreground" :
-                            "bg-warning/20 text-warning"
-                          }`}>
-                            {getStatusLabel(user.status)}
-                          </span>
-                        </td>
-                        <td className="py-3 px-2 text-right">
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </motion.div>
-
-            {/* Pending Items */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="glass-card p-6 rounded-2xl"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="font-display text-xl font-semibold">{t("admin.pendingApproval")}</h2>
-                <Button variant="outline" size="sm">{t("dashboard.viewAll")}</Button>
-              </div>
-
-              <div className="space-y-4">
-                {pendingItems.map((item) => (
+                {statCards.map((stat) => (
                   <div
-                    key={item.id}
-                    className="flex items-center gap-4 p-4 rounded-xl bg-secondary/30"
+                    key={stat.label}
+                    className="glass-card p-6 rounded-2xl group hover:neon-glow-sm transition-all duration-300"
                   >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium">{item.name}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${
-                          item.type === "Lost" 
-                            ? "bg-destructive/20 text-destructive" 
-                            : "bg-success/20 text-success"
-                        }`}>
-                          {item.type === "Lost" ? t("items.lost") : t("items.found")}
-                        </span>
-                        {item.status === "flagged" && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-warning/20 text-warning">
-                            {t("admin.flagged")}
-                          </span>
-                        )}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                        <stat.icon className="w-6 h-6 text-white" />
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        {item.user} • {item.date}
-                      </div>
+                      <span className={`text-sm font-medium ${
+                        stat.change.startsWith("+") ? "text-success" : "text-destructive"
+                      }`}>
+                        {stat.change}
+                      </span>
                     </div>
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-success hover:text-success">
-                        <CheckCircle className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
-                        <XCircle className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    <div className="font-display text-3xl font-bold mb-1">{stat.value}</div>
+                    <div className="text-sm text-muted-foreground">{stat.label}</div>
                   </div>
                 ))}
-              </div>
-            </motion.div>
-          </div>
+              </motion.div>
 
-          {/* Activity Chart Placeholder */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
-            className="glass-card p-6 rounded-2xl mt-6"
-          >
-            <h2 className="font-display text-xl font-semibold mb-6">{t("admin.activityOverview")}</h2>
-            <div className="h-64 flex items-center justify-center bg-secondary/30 rounded-xl">
-              <div className="text-center">
-                <BarChart3 className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">{t("admin.chartPlaceholder")}</p>
-                <p className="text-sm text-muted-foreground">{t("admin.connectToDatabase")}</p>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Users Table */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="glass-card p-6 rounded-2xl"
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="font-display text-xl font-semibold">{t("admin.recentUsers")}</h2>
+                    <div className="relative w-64">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        placeholder={t("admin.searchUsers")}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10 h-9"
+                      />
+                    </div>
+                  </div>
+
+                  {uniqueUsers.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <p>No users found</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-border">
+                            <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">{t("admin.user")}</th>
+                            <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">{t("admin.items")}</th>
+                            <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">{t("admin.status")}</th>
+                            <th className="text-right py-3 px-2 text-sm font-medium text-muted-foreground">{t("admin.actions")}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {uniqueUsers.slice(0, 5).map((user, idx) => (
+                            <tr key={idx} className="border-b border-border/50 hover:bg-secondary/30">
+                              <td className="py-3 px-2">
+                                <div>
+                                  <div className="font-medium">{user.name}</div>
+                                  <div className="text-sm text-muted-foreground">{user.email}</div>
+                                </div>
+                              </td>
+                              <td className="py-3 px-2">{user.itemCount}</td>
+                              <td className="py-3 px-2">
+                                <span className="text-xs px-2 py-1 rounded-full bg-success/20 text-success">
+                                  {t("admin.active")}
+                                </span>
+                              </td>
+                              <td className="py-3 px-2 text-right">
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreVertical className="w-4 h-4" />
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </motion.div>
+
+                {/* Pending Items */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                  className="glass-card p-6 rounded-2xl"
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="font-display text-xl font-semibold">{t("admin.pendingApproval")}</h2>
+                    <Button variant="outline" size="sm">{t("dashboard.viewAll")}</Button>
+                  </div>
+
+                  {pendingItems.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <CheckCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <p>No pending items</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {pendingItems.map((item) => (
+                        <div
+                          key={item.id}
+                          className="flex items-center gap-4 p-4 rounded-xl bg-secondary/30"
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-medium">{item.title}</span>
+                              <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                item.type === "lost" 
+                                  ? "bg-destructive/20 text-destructive" 
+                                  : "bg-success/20 text-success"
+                              }`}>
+                                {item.type === "lost" ? t("items.lost") : t("items.found")}
+                              </span>
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {item.user_email || "Unknown"} • {getTimeAgo(item.created_at)}
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-success hover:text-success"
+                              onClick={() => handleApproveItem(item.id)}
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={() => handleRejectItem(item.id)}
+                            >
+                              <XCircle className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
               </div>
-            </div>
-          </motion.div>
+
+              {/* Activity Chart */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+                className="glass-card p-6 rounded-2xl mt-6"
+              >
+                <h2 className="font-display text-xl font-semibold mb-6">{t("admin.activityOverview")}</h2>
+                <div className="h-64 flex items-center justify-center bg-secondary/30 rounded-xl">
+                  <div className="text-center">
+                    <BarChart3 className="w-12 h-12 text-primary mx-auto mb-3" />
+                    <p className="text-foreground font-medium">
+                      {stats.totalItems} items • {stats.matchesMade} matches
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {stats.totalUsers} active users
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            </>
+          )}
         </div>
       </main>
 

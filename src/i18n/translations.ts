@@ -187,6 +187,8 @@ export const translations = {
         contactInitiated: "Contact Initiated",
         verifiedMatch: "Verified Match",
         review: "Review",
+        noItems: "No items reported yet",
+        reportFirst: "Report your first item",
       },
       // Matching
       matching: {
@@ -509,6 +511,8 @@ export const translations = {
         contactInitiated: "Mawasiliano Yameanzishwa",
         verifiedMatch: "Mechi Iliyothibitishwa",
         review: "Kagua",
+        noItems: "Hakuna vitu vilivyoripotiwa bado",
+        reportFirst: "Ripoti kitu chako cha kwanza",
       },
       // Matching
       matching: {
