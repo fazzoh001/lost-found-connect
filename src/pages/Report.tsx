@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   Upload, MapPin, Calendar, Tag, FileText, Camera, 
-  Sparkles, CheckCircle, AlertCircle, Loader2 
+  Sparkles, CheckCircle, AlertCircle, Loader2, X 
 } from "lucide-react";
 import { useAuth } from "@/contexts/PhpAuthContext";
 import { createItem, generateItemQRCode } from "@/services/phpItemService";
@@ -43,6 +43,8 @@ const Report = () => {
     contactPhone: "",
   });
 
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
@@ -54,11 +56,29 @@ const Report = () => {
         });
         return;
       }
+      
+      // Create previews for new files
+      newFiles.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreviews(prev => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+      
       setFormData(prev => ({
         ...prev,
         images: [...prev.images, ...newFiles]
       }));
     }
+  };
+
+  const removeImage = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const validateStep = (): boolean => {
@@ -317,11 +337,25 @@ const Report = () => {
                         </p>
                       </label>
                     </div>
-                    {formData.images.length > 0 && (
-                      <div className="flex gap-2 mt-3 flex-wrap">
-                        {formData.images.map((file, idx) => (
-                          <div key={idx} className="px-3 py-1 bg-secondary rounded-lg text-sm">
-                            {file.name}
+                    {imagePreviews.length > 0 && (
+                      <div className="grid grid-cols-3 gap-3 mt-4">
+                        {imagePreviews.map((preview, idx) => (
+                          <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden bg-secondary">
+                            <img 
+                              src={preview} 
+                              alt={`Preview ${idx + 1}`} 
+                              className="w-full h-full object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeImage(idx)}
+                              className="absolute top-2 right-2 p-1.5 bg-destructive text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                            <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent">
+                              <p className="text-white text-xs truncate">{formData.images[idx]?.name}</p>
+                            </div>
                           </div>
                         ))}
                       </div>

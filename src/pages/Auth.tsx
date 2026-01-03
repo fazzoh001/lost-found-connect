@@ -8,6 +8,8 @@ import { Zap, Mail, Lock, User, Eye, EyeOff, ArrowRight, Loader2, Smartphone, Ke
 import { useAuth } from "@/contexts/PhpAuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { passwordSchema, validatePasswordStrength } from "@/lib/passwordValidation";
+import { PasswordStrengthIndicator } from "@/components/PasswordStrengthIndicator";
 
 // Floating icons for decoration
 const floatingIcons = [
@@ -64,6 +66,8 @@ const Auth = () => {
     }
   }, [user, navigate, from]);
   
+  const passwordStrength = validatePasswordStrength(password);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -86,6 +90,19 @@ const Auth = () => {
           setIsLoading(false);
           return;
         }
+        
+        // Validate password strength for signup
+        const passwordValidation = passwordSchema.safeParse(password);
+        if (!passwordValidation.success) {
+          toast({
+            title: t("validation.weakPassword"),
+            description: passwordValidation.error.errors[0].message,
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+        
         const { error } = await signUp(email, password, name);
         if (error) throw error;
         toast({
@@ -239,22 +256,27 @@ const Auth = () => {
                 />
               </div>
 
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  placeholder={t("auth.password")}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-12 pr-12"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
+              <div>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder={t("auth.password")}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-12 pr-12"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                {!isLogin && (
+                  <PasswordStrengthIndicator strength={passwordStrength} show={password.length > 0} />
+                )}
               </div>
 
               {isLogin && (
