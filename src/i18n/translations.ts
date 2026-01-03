@@ -145,6 +145,8 @@ export const translations = {
         reportSubmitted: "Report Submitted!",
         itemReported: "Your {type} item has been reported. We'll notify you of any matches.",
         submissionFailed: "Submission Failed",
+        matchesFound: "Potential Matches Found!",
+        matchesFoundDesc: "We found {count} potential matches for your item. Check the Matching page for details.",
       },
       // Items
       items: {
@@ -469,6 +471,8 @@ export const translations = {
         reportSubmitted: "Ripoti Imetumwa!",
         itemReported: "Kitu chako cha {type} kimeripotiwa. Tutakujulisha mechi yoyote.",
         submissionFailed: "Kutuma Kumeshindikana",
+        matchesFound: "Mechi Zinazowezekana Zimepatikana!",
+        matchesFoundDesc: "Tumepata mechi {count} zinazowezekana kwa kitu chako. Angalia ukurasa wa Kulinganisha kwa maelezo.",
       },
       // Items
       items: {
