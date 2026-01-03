@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/PhpAuthContext";
 import { createItem, generateItemQRCode } from "@/services/phpItemService";
+import { matchesApi } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { ItemFormData } from "@/types/item";
 
@@ -115,6 +116,19 @@ const Report = () => {
       
       // Generate QR code for the item
       await generateItemQRCode(itemId);
+      
+      // Run auto-matching to find potential matches
+      try {
+        const matchResult = await matchesApi.autoMatch(itemId);
+        if (matchResult.matches_found > 0) {
+          toast({
+            title: t("report.matchesFound"),
+            description: t("report.matchesFoundDesc", { count: matchResult.matches_found }),
+          });
+        }
+      } catch (matchError) {
+        console.log("Auto-matching skipped:", matchError);
+      }
       
       toast({
         title: t("report.reportSubmitted"),

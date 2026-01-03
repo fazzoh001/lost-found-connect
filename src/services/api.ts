@@ -189,6 +189,25 @@ export const matchesApi = {
     
     return handleResponse(response);
   },
+
+  async autoMatch(itemId: string) {
+    const response = await fetch(`${API_URL}/matches/auto-match.php`, {
+      method: 'POST',
+      headers: getHeaders(true),
+      body: JSON.stringify({ item_id: itemId }),
+    });
+    
+    return handleResponse(response);
+  },
+
+  async runAllMatching() {
+    const response = await fetch(`${API_URL}/matches/run-all.php`, {
+      method: 'POST',
+      headers: getHeaders(true),
+    });
+    
+    return handleResponse(response);
+  },
 };
 
 // Upload API
