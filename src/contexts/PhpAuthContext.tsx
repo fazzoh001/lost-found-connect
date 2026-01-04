@@ -43,6 +43,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         try {
           const userData = await authApi.me();
           setUser(userData.user);
+          // Note: role from API is for UI display only
+          // All admin operations are verified server-side from the database
           setIsAdmin(userData.user.role === 'admin');
         } catch (error) {
           // Token invalid, clear it
@@ -59,6 +61,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       const data = await authApi.register(email, password, name);
       setUser(data.user);
+      // Note: role from API is for UI display only
+      // All admin operations are verified server-side from the database
       setIsAdmin(data.user.role === 'admin');
       return { error: null };
     } catch (error) {
@@ -70,6 +74,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       const data = await authApi.login(email, password);
       setUser(data.user);
+      // Note: role from API is for UI display only
+      // All admin operations are verified server-side from the database
       setIsAdmin(data.user.role === 'admin');
       return { error: null };
     } catch (error) {

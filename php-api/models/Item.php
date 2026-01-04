@@ -113,7 +113,7 @@ class Item {
         return false;
     }
 
-    // Update item
+    // Update item - owner only
     public function update($itemId, $data, $userId) {
         // Verify ownership
         $item = $this->getById($itemId);
@@ -139,11 +139,52 @@ class Item {
         return $stmt->execute();
     }
 
-    // Delete item
+    // Update item - admin bypass (no ownership check)
+    // IMPORTANT: Only call this after verifying admin role from database
+    public function updateAsAdmin($itemId, $data) {
+        $item = $this->getById($itemId);
+        if (!$item) {
+            return false;
+        }
+
+        $query = "UPDATE " . $this->table . " 
+                  SET title = COALESCE(:title, title), 
+                      description = COALESCE(:description, description), 
+                      location = COALESCE(:location, location),
+                      status = COALESCE(:status, status),
+                      updated_at = NOW()
+                  WHERE id = :id";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':title', $data['title']);
+        $stmt->bindParam(':description', $data['description']);
+        $stmt->bindParam(':location', $data['location']);
+        $stmt->bindParam(':status', $data['status']);
+        $stmt->bindParam(':id', $itemId);
+
+        return $stmt->execute();
+    }
+
+    // Delete item - owner only
     public function delete($itemId, $userId) {
         // Verify ownership
         $item = $this->getById($itemId);
         if (!$item || $item['user_id'] !== $userId) {
+            return false;
+        }
+
+        $query = "DELETE FROM " . $this->table . " WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $itemId);
+
+        return $stmt->execute();
+    }
+
+    // Delete item - admin bypass (no ownership check)
+    // IMPORTANT: Only call this after verifying admin role from database
+    public function deleteAsAdmin($itemId) {
+        $item = $this->getById($itemId);
+        if (!$item) {
             return false;
         }
 

@@ -30,7 +30,9 @@ if ($userData) {
             "phone" => $userData['phone'],
             "avatar_url" => $userData['avatar_url'],
             "preferred_language" => $userData['preferred_language'],
-            "is_admin" => $isAdmin
+            // role is provided for UI display purposes only
+            // All privileged operations verify role from database server-side
+            "role" => $isAdmin ? 'admin' : 'user'
         ]
     ]);
 } else {
