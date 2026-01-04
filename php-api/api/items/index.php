@@ -2,6 +2,7 @@
 require_once '../../config/cors.php';
 require_once '../../config/database.php';
 require_once '../../config/jwt.php';
+require_once '../../middleware/ratelimit.php';
 require_once '../../models/Item.php';
 
 $database = new Database();
@@ -12,6 +13,9 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 switch ($method) {
     case 'GET':
+        // Rate limit for public endpoints: 100 requests per hour per IP
+        rateLimit(100, 3600, 'items_list');
+        
         // Get filters from query params
         $filters = [
             'type' => $_GET['type'] ?? null,
@@ -20,6 +24,12 @@ switch ($method) {
             'search' => $_GET['search'] ?? null
         ];
 
+        // Pagination support
+        $page = max(1, intval($_GET['page'] ?? 1));
+        $limit = min(100, max(1, intval($_GET['limit'] ?? 50))); // Max 100 items per page
+        $filters['page'] = $page;
+        $filters['limit'] = $limit;
+
         $items = $item->getAll($filters);
         
         http_response_code(200);
@@ -27,6 +37,9 @@ switch ($method) {
         break;
 
     case 'POST':
+        // Stricter rate limit for write operations: 20 per hour
+        rateLimit(20, 3600, 'items_create');
+        
         // Require authentication
         $authUser = JWT::getAuthUser();
         if (!$authUser) {
