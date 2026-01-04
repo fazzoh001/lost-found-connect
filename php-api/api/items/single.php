@@ -2,6 +2,7 @@
 require_once '../../config/cors.php';
 require_once '../../config/database.php';
 require_once '../../config/jwt.php';
+require_once '../../middleware/auth.php';
 require_once '../../models/Item.php';
 
 $database = new Database();
@@ -33,12 +34,8 @@ switch ($method) {
         break;
 
     case 'PUT':
-        $authUser = JWT::getAuthUser();
-        if (!$authUser) {
-            http_response_code(401);
-            echo json_encode(["error" => "Unauthorized"]);
-            exit;
-        }
+        // Require authentication
+        $authUser = requireAuth();
 
         $data = json_decode(file_get_contents("php://input"));
         
@@ -49,29 +46,79 @@ switch ($method) {
             'status' => isset($data->status) ? htmlspecialchars(strip_tags($data->status)) : 'active'
         ];
 
-        if ($item->update($itemId, $updateData, $authUser['user_id'])) {
+        // Get the item to check ownership
+        $existingItem = $item->getById($itemId);
+        if (!$existingItem) {
+            http_response_code(404);
+            echo json_encode(["error" => "Item not found"]);
+            exit;
+        }
+
+        // Check if user is owner OR admin (verified from database)
+        $isOwner = $authUser['user_id'] === $existingItem['user_id'];
+        $isAdmin = userHasRole($authUser['user_id'], 'admin');
+
+        if (!$isOwner && !$isAdmin) {
+            http_response_code(403);
+            echo json_encode(["error" => "Access denied. You must be the owner or an admin."]);
+            exit;
+        }
+
+        // Use appropriate method based on access level
+        if ($isAdmin && !$isOwner) {
+            // Admin updating someone else's item
+            $success = $item->updateAsAdmin($itemId, $updateData);
+        } else {
+            // Owner updating their own item
+            $success = $item->update($itemId, $updateData, $authUser['user_id']);
+        }
+
+        if ($success) {
             http_response_code(200);
             echo json_encode(["message" => "Item updated successfully"]);
         } else {
-            http_response_code(403);
-            echo json_encode(["error" => "Unauthorized or item not found"]);
+            http_response_code(500);
+            echo json_encode(["error" => "Failed to update item"]);
         }
         break;
 
     case 'DELETE':
-        $authUser = JWT::getAuthUser();
-        if (!$authUser) {
-            http_response_code(401);
-            echo json_encode(["error" => "Unauthorized"]);
+        // Require authentication
+        $authUser = requireAuth();
+
+        // Get the item to check ownership
+        $existingItem = $item->getById($itemId);
+        if (!$existingItem) {
+            http_response_code(404);
+            echo json_encode(["error" => "Item not found"]);
             exit;
         }
 
-        if ($item->delete($itemId, $authUser['user_id'])) {
+        // Check if user is owner OR admin (verified from database)
+        $isOwner = $authUser['user_id'] === $existingItem['user_id'];
+        $isAdmin = userHasRole($authUser['user_id'], 'admin');
+
+        if (!$isOwner && !$isAdmin) {
+            http_response_code(403);
+            echo json_encode(["error" => "Access denied. You must be the owner or an admin."]);
+            exit;
+        }
+
+        // Use appropriate method based on access level
+        if ($isAdmin && !$isOwner) {
+            // Admin deleting someone else's item
+            $success = $item->deleteAsAdmin($itemId);
+        } else {
+            // Owner deleting their own item
+            $success = $item->delete($itemId, $authUser['user_id']);
+        }
+
+        if ($success) {
             http_response_code(200);
             echo json_encode(["message" => "Item deleted successfully"]);
         } else {
-            http_response_code(403);
-            echo json_encode(["error" => "Unauthorized or item not found"]);
+            http_response_code(500);
+            echo json_encode(["error" => "Failed to delete item"]);
         }
         break;
 

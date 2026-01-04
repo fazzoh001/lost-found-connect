@@ -27,10 +27,12 @@ if ($result['success']) {
     $isAdmin = $user->hasRole($result['user']['id'], 'admin');
     
     // Generate JWT token
+    // NOTE: is_admin in JWT is for UI convenience only
+    // All admin operations MUST verify role from database, not JWT claims
     $token = JWT::encode([
         'user_id' => $result['user']['id'],
-        'email' => $result['user']['email'],
-        'is_admin' => $isAdmin
+        'email' => $result['user']['email']
+        // Removed is_admin from JWT - admin status must be verified from database
     ]);
 
     http_response_code(200);
@@ -40,7 +42,9 @@ if ($result['success']) {
             "id" => $result['user']['id'],
             "email" => $result['user']['email'],
             "full_name" => $result['user']['full_name'],
-            "is_admin" => $isAdmin
+            // role is provided for UI display purposes only
+            // All privileged operations verify role from database server-side
+            "role" => $isAdmin ? 'admin' : 'user'
         ],
         "access_token" => $token
     ]);
