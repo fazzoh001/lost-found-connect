@@ -3,6 +3,7 @@ require_once '../../config/cors.php';
 require_once '../../config/database.php';
 require_once '../../config/jwt.php';
 require_once '../../middleware/auth.php';
+require_once '../../middleware/ratelimit.php';
 require_once '../../models/Item.php';
 
 $database = new Database();
@@ -22,6 +23,9 @@ if (!$itemId) {
 
 switch ($method) {
     case 'GET':
+        // Rate limit for public endpoints: 200 requests per hour per IP
+        rateLimit(200, 3600, 'items_single');
+        
         $itemData = $item->getById($itemId);
         
         if ($itemData) {
@@ -34,6 +38,9 @@ switch ($method) {
         break;
 
     case 'PUT':
+        // Stricter rate limit for write operations: 30 per hour
+        rateLimit(30, 3600, 'items_update');
+        
         // Require authentication
         $authUser = requireAuth();
 
@@ -83,6 +90,9 @@ switch ($method) {
         break;
 
     case 'DELETE':
+        // Stricter rate limit for delete operations: 20 per hour
+        rateLimit(20, 3600, 'items_delete');
+        
         // Require authentication
         $authUser = requireAuth();
 

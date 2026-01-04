@@ -65,26 +65,64 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null;
   }
 
-  return (
-    <style
-      dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
-${colorConfig
-  .map(([key, itemConfig]) => {
-    const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
-  })
-  .join("\n")}
-}
-`,
-          )
-          .join("\n"),
-      }}
-    />
-  );
+  // Build CSS variables safely without dangerouslySetInnerHTML
+  // This approach validates and sanitizes color values
+  const cssVarsLight: Record<string, string> = {};
+  const cssVarsDark: Record<string, string> = {};
+
+  colorConfig.forEach(([key, itemConfig]) => {
+    // Validate key to prevent injection (only alphanumeric and hyphens)
+    const safeKey = key.replace(/[^a-zA-Z0-9-]/g, '');
+    
+    // Get color values and validate they're safe CSS color values
+    const lightColor = itemConfig.theme?.light || itemConfig.color;
+    const darkColor = itemConfig.theme?.dark || itemConfig.color;
+    
+    // Validate color format (hex, rgb, hsl, named colors, or css variables)
+    const colorRegex = /^(#[0-9a-fA-F]{3,8}|rgb\([^)]+\)|rgba\([^)]+\)|hsl\([^)]+\)|hsla\([^)]+\)|var\(--[^)]+\)|[a-zA-Z]+)$/;
+    
+    if (lightColor && colorRegex.test(lightColor.trim())) {
+      cssVarsLight[`--color-${safeKey}`] = lightColor.trim();
+    }
+    if (darkColor && colorRegex.test(darkColor.trim())) {
+      cssVarsDark[`--color-${safeKey}`] = darkColor.trim();
+    }
+  });
+
+  // Create style elements programmatically
+  React.useEffect(() => {
+    const styleId = `chart-style-${id}`;
+    let existingStyle = document.getElementById(styleId);
+    
+    if (!existingStyle) {
+      existingStyle = document.createElement('style');
+      existingStyle.id = styleId;
+      document.head.appendChild(existingStyle);
+    }
+
+    // Build CSS string from validated values
+    const lightVars = Object.entries(cssVarsLight)
+      .map(([prop, val]) => `  ${prop}: ${val};`)
+      .join('\n');
+    const darkVars = Object.entries(cssVarsDark)
+      .map(([prop, val]) => `  ${prop}: ${val};`)
+      .join('\n');
+
+    existingStyle.textContent = `
+      [data-chart=${id}] {
+        ${lightVars}
+      }
+      .dark [data-chart=${id}] {
+        ${darkVars}
+      }
+    `;
+
+    return () => {
+      existingStyle?.remove();
+    };
+  }, [id, JSON.stringify(cssVarsLight), JSON.stringify(cssVarsDark)]);
+
+  return null;
 };
 
 const ChartTooltip = RechartsPrimitive.Tooltip;

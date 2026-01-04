@@ -2,7 +2,12 @@
 require_once '../../config/cors.php';
 require_once '../../config/database.php';
 require_once '../../config/jwt.php';
+require_once '../../middleware/ratelimit.php';
 require_once '../../models/User.php';
+
+// Strict rate limiting for auth endpoints to prevent brute force attacks
+// 10 login attempts per 15 minutes per IP
+rateLimit(10, 900, 'auth_login');
 
 $database = new Database();
 $db = $database->getConnection();
@@ -50,6 +55,7 @@ if ($result['success']) {
     ]);
 } else {
     http_response_code(401);
-    echo json_encode(["error" => $result['message']]);
+    // Generic error message to prevent user enumeration
+    echo json_encode(["error" => "Invalid credentials"]);
 }
 ?>
