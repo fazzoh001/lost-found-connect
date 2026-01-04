@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Search, MapPin, Sparkles, ArrowRight } from "lucide-react";
+import heroBanner from "@/assets/hero-banner.png";
 
 export const HeroSection = () => {
   const { t } = useTranslation();
@@ -19,87 +20,131 @@ export const HeroSection = () => {
       <div className="absolute inset-0 bg-[linear-gradient(rgba(139,92,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(139,92,246,0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
 
       <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-4xl mx-auto text-center">
-          {/* Badge */}
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Left Content */}
+          <div className="text-center lg:text-left">
+            {/* Badge */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-primary/30 mb-8"
+            >
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium">{t("hero.badge")}</span>
+            </motion.div>
+
+            {/* Heading */}
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="font-display text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight"
+            >
+              {t("hero.title1")}{" "}
+              <span className="gradient-text neon-text">{t("hero.title2")}</span>
+            </motion.h1>
+
+            {/* Subtitle */}
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="text-xl text-muted-foreground mb-10 max-w-xl mx-auto lg:mx-0"
+            >
+              {t("hero.description")}
+            </motion.p>
+
+            {/* CTA Buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-12"
+            >
+              <Link to="/report">
+                <Button variant="neon" size="xl" className="group">
+                  <MapPin className="w-5 h-5" />
+                  {t("hero.reportLost")}
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
+              <Link to="/items">
+                <Button variant="glass" size="xl">
+                  <Search className="w-5 h-5" />
+                  {t("hero.browsFound")}
+                </Button>
+              </Link>
+            </motion.div>
+
+            {/* Stats */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="grid grid-cols-3 gap-8 max-w-md mx-auto lg:mx-0"
+            >
+              {[
+                { value: "10K+", label: t("hero.stat1") },
+                { value: "95%", label: t("hero.stat2") },
+                { value: "24/7", label: t("hero.stat3") },
+              ].map((stat, index) => (
+                <div key={index} className="text-center lg:text-left">
+                  <div className="font-display text-2xl md:text-3xl font-bold gradient-text">{stat.value}</div>
+                  <div className="text-sm text-muted-foreground">{stat.label}</div>
+                </div>
+              ))}
+            </motion.div>
+          </div>
+
+          {/* Right Content - Hero Image */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-primary/30 mb-8"
+            initial={{ opacity: 0, x: 50, scale: 0.9 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="relative hidden lg:block"
           >
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium">{t("hero.badge")}</span>
-          </motion.div>
-
-          {/* Heading */}
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="font-display text-5xl md:text-7xl font-bold mb-6 leading-tight"
-          >
-            {t("hero.title1")}{" "}
-            <span className="gradient-text neon-text">{t("hero.title2")}</span>
-          </motion.h1>
-
-          {/* Subtitle */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto"
-          >
-            {t("hero.description")}
-          </motion.p>
-
-          {/* CTA Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12"
-          >
-            <Link to="/report">
-              <Button variant="neon" size="xl" className="group">
-                <MapPin className="w-5 h-5" />
-                {t("hero.reportLost")}
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
-            <Link to="/items">
-              <Button variant="glass" size="xl">
-                <Search className="w-5 h-5" />
-                {t("hero.browsFound")}
-              </Button>
-            </Link>
-          </motion.div>
-
-          {/* Stats */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="grid grid-cols-3 gap-8 max-w-xl mx-auto"
-          >
-            {[
-              { value: "10K+", label: t("hero.stat1") },
-              { value: "95%", label: t("hero.stat2") },
-              { value: "24/7", label: t("hero.stat3") },
-            ].map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="font-display text-3xl md:text-4xl font-bold gradient-text">{stat.value}</div>
-                <div className="text-sm text-muted-foreground">{stat.label}</div>
-              </div>
-            ))}
+            {/* Main Hero Image */}
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-neon-purple/20 to-neon-pink/20 rounded-3xl blur-xl transform scale-95" />
+              <img 
+                src={heroBanner} 
+                alt="Lost and Found - Connecting People with Their Items" 
+                className="relative rounded-3xl shadow-2xl w-full max-w-2xl mx-auto hover-scale"
+              />
+              
+              {/* Floating decorative elements */}
+              <motion.div
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -top-4 -right-4 glass-card px-4 py-2 rounded-xl"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-success animate-pulse" />
+                  <span className="text-sm font-medium">Live Matching</span>
+                </div>
+              </motion.div>
+              
+              <motion.div
+                animate={{ y: [0, 10, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                className="absolute -bottom-4 -left-4 glass-card px-4 py-2 rounded-xl"
+              >
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium">AI Powered</span>
+                </div>
+              </motion.div>
+            </div>
           </motion.div>
         </div>
 
-        {/* Floating Cards Preview */}
+        {/* Floating Cards Preview - Mobile Only */}
         <motion.div
           initial={{ opacity: 0, y: 60 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.5 }}
-          className="mt-16 relative"
+          className="mt-16 relative lg:hidden"
         >
           <div className="flex justify-center gap-4 overflow-hidden">
             {[
