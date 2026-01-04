@@ -6,12 +6,13 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/PhpAuthContext";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { RoleBadge } from "@/components/RoleBadge";
 
 export const Navbar = () => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { t } = useTranslation();
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAdmin } = useAuth();
 
   const navLinks = [
     { name: t("nav.home"), path: "/" },
@@ -64,6 +65,7 @@ export const Navbar = () => {
             </Button>
             {user ? (
               <>
+                <RoleBadge isAdmin={isAdmin} />
                 <Link to="/report">
                   <Button variant="neon">{t("nav.reportItem")}</Button>
                 </Link>
@@ -117,6 +119,9 @@ export const Navbar = () => {
             <div className="pt-4 space-y-2">
               {user ? (
                 <>
+                  <div className="flex justify-center pb-2">
+                    <RoleBadge isAdmin={isAdmin} size="md" />
+                  </div>
                   <Link to="/report" onClick={() => setMobileMenuOpen(false)}>
                     <Button variant="neon" className="w-full">{t("nav.reportItem")}</Button>
                   </Link>
