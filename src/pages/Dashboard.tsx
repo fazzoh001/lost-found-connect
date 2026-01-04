@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/PhpAuthContext";
 import { useEffect, useState } from "react";
 import { itemsApi, matchesApi } from "@/services/api";
 import { formatDistanceToNow } from "date-fns";
+import { RoleBadge } from "@/components/RoleBadge";
 
 interface DashboardItem {
   id: string;
@@ -33,7 +34,7 @@ interface DashboardMatch {
 
 const Dashboard = () => {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [profileName, setProfileName] = useState<string | null>(null);
   const [userItems, setUserItems] = useState<DashboardItem[]>([]);
   const [matches, setMatches] = useState<DashboardMatch[]>([]);
@@ -137,9 +138,12 @@ const Dashboard = () => {
             className="flex flex-col md:flex-row md:items-center md:justify-between mb-8"
           >
             <div>
-              <h1 className="font-display text-3xl md:text-4xl font-bold mb-2">
-                {t("dashboard.welcomeBack")} <span className="gradient-text">{profileName || user?.email?.split('@')[0] || 'User'}</span>
-              </h1>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="font-display text-3xl md:text-4xl font-bold">
+                  {t("dashboard.welcomeBack")} <span className="gradient-text">{profileName || user?.email?.split('@')[0] || 'User'}</span>
+                </h1>
+                <RoleBadge isAdmin={isAdmin} size="md" />
+              </div>
               <p className="text-muted-foreground">{t("dashboard.whatsHappening")}</p>
             </div>
             <div className="flex gap-3 mt-4 md:mt-0">
