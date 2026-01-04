@@ -1,6 +1,9 @@
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { Brain, Zap, Shield, Bell, MapPin, Users } from "lucide-react";
+import featurePhone from "@/assets/feature-phone.png";
+import featureSecurity from "@/assets/feature-security.png";
+import featureCommunity from "@/assets/feature-community.png";
 
 export const FeaturesSection = () => {
   const { t } = useTranslation();
@@ -66,6 +69,72 @@ export const FeaturesSection = () => {
             {t("features.whyChooseDesc")}
           </p>
         </motion.div>
+
+        {/* Feature Showcase with Images */}
+        <div className="grid lg:grid-cols-3 gap-8 mb-16">
+          {/* Smart Notifications Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="glass-card rounded-3xl p-6 hover:neon-glow-sm transition-all duration-300 group"
+          >
+            <div className="relative h-48 mb-6 flex items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-neon-purple/10 to-neon-pink/10">
+              <motion.img 
+                src={featurePhone} 
+                alt="Smart Notifications" 
+                className="w-40 h-40 object-contain group-hover:scale-110 transition-transform duration-500"
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              />
+            </div>
+            <h3 className="font-display text-xl font-semibold mb-3">{t("features.realtime")}</h3>
+            <p className="text-muted-foreground">{t("features.realtimeDesc")}</p>
+          </motion.div>
+
+          {/* Security Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="glass-card rounded-3xl p-6 hover:neon-glow-sm transition-all duration-300 group"
+          >
+            <div className="relative h-48 mb-6 flex items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-neon-blue/10 to-neon-cyan/10">
+              <motion.img 
+                src={featureSecurity} 
+                alt="Secure Platform" 
+                className="w-40 h-40 object-contain group-hover:scale-110 transition-transform duration-500"
+                animate={{ rotate: [0, 5, 0, -5, 0] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+              />
+            </div>
+            <h3 className="font-display text-xl font-semibold mb-3">{t("features.secure")}</h3>
+            <p className="text-muted-foreground">{t("features.secureDesc")}</p>
+          </motion.div>
+
+          {/* Community Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="glass-card rounded-3xl p-6 hover:neon-glow-sm transition-all duration-300 group"
+          >
+            <div className="relative h-48 mb-6 flex items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-neon-pink/10 to-neon-purple/10">
+              <motion.img 
+                src={featureCommunity} 
+                alt="Community Network" 
+                className="w-40 h-40 object-contain group-hover:scale-110 transition-transform duration-500"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              />
+            </div>
+            <h3 className="font-display text-xl font-semibold mb-3">{t("features.community")}</h3>
+            <p className="text-muted-foreground">{t("features.communityDesc")}</p>
+          </motion.div>
+        </div>
 
         {/* Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
