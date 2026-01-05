@@ -229,4 +229,22 @@ export const uploadApi = {
   },
 };
 
+// Profile API
+export const profileApi = {
+  async update(data: {
+    full_name?: string;
+    phone?: string;
+    preferred_language?: string;
+    avatar_url?: string;
+  }) {
+    const response = await fetch(`${API_URL}/profile/update.php`, {
+      method: 'PUT',
+      headers: getHeaders(true),
+      body: JSON.stringify(data),
+    });
+    
+    return handleResponse(response);
+  },
+};
+
 export { getToken, setToken, removeToken, getStoredUser, setStoredUser, removeStoredUser };

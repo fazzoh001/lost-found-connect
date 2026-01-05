@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, Menu, X, Zap, LogOut } from "lucide-react";
+import { Search, Menu, X, Zap, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -66,6 +66,11 @@ export const Navbar = () => {
             {user ? (
               <>
                 <RoleBadge isAdmin={isAdmin} />
+                <Link to="/profile">
+                  <Button variant="ghost" size="icon" title={t("nav.profile", "Profile")}>
+                    <Settings className="w-5 h-5" />
+                  </Button>
+                </Link>
                 <Link to="/report">
                   <Button variant="neon">{t("nav.reportItem")}</Button>
                 </Link>
@@ -122,6 +127,12 @@ export const Navbar = () => {
                   <div className="flex justify-center pb-2">
                     <RoleBadge isAdmin={isAdmin} size="md" />
                   </div>
+                  <Link to="/profile" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="ghost" className="w-full">
+                      <Settings className="w-4 h-4 mr-2" />
+                      {t("nav.profile", "Profile Settings")}
+                    </Button>
+                  </Link>
                   <Link to="/report" onClick={() => setMobileMenuOpen(false)}>
                     <Button variant="neon" className="w-full">{t("nav.reportItem")}</Button>
                   </Link>

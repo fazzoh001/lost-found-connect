@@ -15,6 +15,7 @@ import Items from "./pages/Items";
 import ItemDetail from "./pages/ItemDetail";
 import Matching from "./pages/Matching";
 import Admin from "./pages/Admin";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,11 @@ const App = () => (
             <Route path="/admin" element={
               <ProtectedRoute adminOnly>
                 <Admin />
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             } />
             <Route path="*" element={<NotFound />} />
