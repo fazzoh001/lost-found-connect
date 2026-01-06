@@ -87,6 +87,26 @@ export const authApi = {
     return handleResponse(response);
   },
 
+  async forgotPassword(email: string) {
+    const response = await fetch(`${API_URL}/auth/forgot-password.php`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ email }),
+    });
+    
+    return handleResponse(response);
+  },
+
+  async resetPassword(token: string, password: string) {
+    const response = await fetch(`${API_URL}/auth/reset-password.php`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ token, password }),
+    });
+    
+    return handleResponse(response);
+  },
+
   logout() {
     removeToken();
     removeStoredUser();

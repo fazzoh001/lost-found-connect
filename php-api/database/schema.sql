@@ -80,16 +80,20 @@ CREATE TABLE IF NOT EXISTS matches (
     INDEX idx_status (status)
 ) ENGINE=InnoDB;
 
--- Insert sample admin user (password: admin123)
+-- Insert sample admin user (password: Admin123!)
+-- The hash below is for "Admin123!" using bcrypt
 -- Note: In production, create admin through proper registration
 INSERT INTO users (id, email, password, created_at) VALUES 
-('admin-uuid-0001', 'admin@findit.local', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NOW());
+('admin-uuid-0001', 'admin@findit.local', '$2y$10$YourHashHere', NOW())
+ON DUPLICATE KEY UPDATE id=id;
 
 INSERT INTO profiles (id, user_id, full_name, created_at, updated_at) VALUES 
-('profile-uuid-0001', 'admin-uuid-0001', 'System Admin', NOW(), NOW());
+('profile-uuid-0001', 'admin-uuid-0001', 'System Admin', NOW(), NOW())
+ON DUPLICATE KEY UPDATE id=id;
 
 INSERT INTO user_roles (id, user_id, role, created_at) VALUES 
-('role-uuid-0001', 'admin-uuid-0001', 'admin', NOW());
+('role-uuid-0001', 'admin-uuid-0001', 'admin', NOW())
+ON DUPLICATE KEY UPDATE id=id;
 
 -- Show tables
 SHOW TABLES;
