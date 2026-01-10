@@ -11,7 +11,7 @@ require_once __DIR__ . '/../config/database.php';
 
 // Admin credentials
 $adminEmail = 'admin@findit.local';
-$adminPassword = 'Admin123!'; // Change this after first login!
+$adminPassword = 'F1nd!t@Adm1n#2024'; // Strong password - change after first login!
 $adminName = 'System Admin';
 
 try {
