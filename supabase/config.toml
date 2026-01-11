@@ -1,1 +1,5 @@
 project_id = "smnexoktimovfnmnwhts"
+
+[functions.image-match]
+enabled = true
+verify_jwt = false
