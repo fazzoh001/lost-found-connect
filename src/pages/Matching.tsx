@@ -6,10 +6,14 @@ import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { 
   Brain, Sparkles, ArrowRight, CheckCircle, XCircle, 
-  MessageSquare, RefreshCw, ThumbsUp, ThumbsDown, Zap, Loader2
+  MessageSquare, RefreshCw, ThumbsUp, ThumbsDown, Zap, Loader2,
+  Eye, Camera
 } from "lucide-react";
 import { matchesApi } from "@/services/api";
 import { useAuth } from "@/contexts/PhpAuthContext";
+import { analyzeImageMatch, ImageMatchAnalysis as IImageMatchAnalysis } from "@/services/imageMatchService";
+import { ImageMatchAnalysis } from "@/components/ImageMatchAnalysis";
+import { toast } from "sonner";
 
 interface MatchItem {
   id: string;
@@ -19,6 +23,8 @@ interface MatchItem {
     location: string;
     date: string;
     image: string;
+    imageUrl?: string;
+    category?: string;
   };
   foundItem: {
     name: string;
@@ -26,10 +32,13 @@ interface MatchItem {
     location: string;
     date: string;
     image: string;
+    imageUrl?: string;
+    category?: string;
   };
   confidence: number;
   factors: { name: string; score: number }[];
   status: string;
+  aiAnalysis?: IImageMatchAnalysis | null;
 }
 
 const getItemEmoji = (category: string): string => {
@@ -54,6 +63,7 @@ const Matching = () => {
   const [matches, setMatches] = useState<MatchItem[]>([]);
   const [selectedMatch, setSelectedMatch] = useState<MatchItem | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isImageAnalyzing, setIsImageAnalyzing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -76,6 +86,8 @@ const Matching = () => {
           location: match.lost_item?.location || "",
           date: match.lost_item?.date_occurred || "",
           image: getItemEmoji(match.lost_item?.category),
+          imageUrl: match.lost_item?.image_url,
+          category: match.lost_item?.category,
         },
         foundItem: {
           name: match.found_item?.title || "Found Item",
@@ -83,6 +95,8 @@ const Matching = () => {
           location: match.found_item?.location || "",
           date: match.found_item?.date_occurred || "",
           image: getItemEmoji(match.found_item?.category),
+          imageUrl: match.found_item?.image_url,
+          category: match.found_item?.category,
         },
         confidence: Math.round(match.match_score * 100) || 0,
         factors: [
@@ -92,6 +106,7 @@ const Matching = () => {
           { name: "Description Similarity", score: Math.round(match.match_score * 100) || 0 },
         ],
         status: match.status || "pending",
+        aiAnalysis: null,
       }));
       
       setMatches(transformedMatches);
@@ -113,6 +128,61 @@ const Matching = () => {
   const runNewAnalysis = () => {
     setIsAnalyzing(true);
     fetchMatches().finally(() => setIsAnalyzing(false));
+  };
+
+  // Run AI image analysis on selected match
+  const runImageAnalysis = async () => {
+    if (!selectedMatch) return;
+    
+    const { lostItem, foundItem } = selectedMatch;
+    
+    // Check if both items have images
+    if (!lostItem.imageUrl || !foundItem.imageUrl) {
+      toast.error("Both items need images for visual comparison");
+      return;
+    }
+    
+    setIsImageAnalyzing(true);
+    try {
+      const result = await analyzeImageMatch(
+        lostItem.imageUrl,
+        foundItem.imageUrl,
+        {
+          sourceDescription: lostItem.description,
+          targetDescription: foundItem.description,
+          sourceCategory: lostItem.category,
+          targetCategory: foundItem.category,
+        }
+      );
+
+      if (result.success && result.analysis) {
+        // Update the selected match with AI analysis
+        const updatedMatch = {
+          ...selectedMatch,
+          aiAnalysis: result.analysis,
+          // Update confidence based on AI analysis
+          factors: [
+            ...selectedMatch.factors.filter(f => f.name !== "Visual Similarity"),
+            { name: "Visual Similarity (AI)", score: result.analysis.similarity_score }
+          ]
+        };
+        setSelectedMatch(updatedMatch);
+        
+        // Also update in the matches list
+        setMatches(prev => prev.map(m => 
+          m.id === selectedMatch.id ? updatedMatch : m
+        ));
+        
+        toast.success("AI image analysis complete!");
+      } else {
+        toast.error(result.error || "Failed to analyze images");
+      }
+    } catch (err) {
+      console.error("Image analysis error:", err);
+      toast.error("Failed to run image analysis");
+    } finally {
+      setIsImageAnalyzing(false);
+    }
   };
 
   return (
@@ -249,9 +319,26 @@ const Matching = () => {
                   <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20">
                     <div className="text-xs font-semibold text-destructive mb-3">{t("matching.lostItem")}</div>
                     <div className="flex items-center gap-4 mb-3">
-                      <div className="w-16 h-16 rounded-xl bg-secondary flex items-center justify-center text-3xl">
-                        {selectedMatch.lostItem.image}
-                      </div>
+                      {selectedMatch.lostItem.imageUrl ? (
+                        <div className="w-16 h-16 rounded-xl overflow-hidden">
+                          <img 
+                            src={selectedMatch.lostItem.imageUrl} 
+                            alt={selectedMatch.lostItem.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                              (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                            }}
+                          />
+                          <div className="hidden w-16 h-16 rounded-xl bg-secondary flex items-center justify-center text-3xl">
+                            {selectedMatch.lostItem.image}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-16 h-16 rounded-xl bg-secondary flex items-center justify-center text-3xl">
+                          {selectedMatch.lostItem.image}
+                        </div>
+                      )}
                       <div>
                         <h4 className="font-semibold">{selectedMatch.lostItem.name}</h4>
                         <p className="text-sm text-muted-foreground">{selectedMatch.lostItem.location}</p>
@@ -265,9 +352,26 @@ const Matching = () => {
                   <div className="p-4 rounded-xl bg-success/10 border border-success/20">
                     <div className="text-xs font-semibold text-success mb-3">{t("matching.foundItem")}</div>
                     <div className="flex items-center gap-4 mb-3">
-                      <div className="w-16 h-16 rounded-xl bg-secondary flex items-center justify-center text-3xl">
-                        {selectedMatch.foundItem.image}
-                      </div>
+                      {selectedMatch.foundItem.imageUrl ? (
+                        <div className="w-16 h-16 rounded-xl overflow-hidden">
+                          <img 
+                            src={selectedMatch.foundItem.imageUrl} 
+                            alt={selectedMatch.foundItem.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                              (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                            }}
+                          />
+                          <div className="hidden w-16 h-16 rounded-xl bg-secondary flex items-center justify-center text-3xl">
+                            {selectedMatch.foundItem.image}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-16 h-16 rounded-xl bg-secondary flex items-center justify-center text-3xl">
+                          {selectedMatch.foundItem.image}
+                        </div>
+                      )}
                       <div>
                         <h4 className="font-semibold">{selectedMatch.foundItem.name}</h4>
                         <p className="text-sm text-muted-foreground">{selectedMatch.foundItem.location}</p>
@@ -277,7 +381,41 @@ const Matching = () => {
                     <p className="text-xs text-muted-foreground mt-2">{selectedMatch.foundItem.date}</p>
                   </div>
                 </div>
+
+                {/* AI Image Analysis Button */}
+                {selectedMatch.lostItem.imageUrl && selectedMatch.foundItem.imageUrl && (
+                  <div className="mt-6 pt-6 border-t border-border">
+                    <Button 
+                      onClick={runImageAnalysis} 
+                      disabled={isImageAnalyzing}
+                      className="w-full gap-2"
+                      variant="outline"
+                    >
+                      {isImageAnalyzing ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Analyzing images with AI...
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="w-4 h-4" />
+                          <Camera className="w-4 h-4" />
+                          Run AI Visual Comparison
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
               </div>
+
+              {/* AI Image Analysis Results */}
+              {selectedMatch.aiAnalysis && (
+                <ImageMatchAnalysis 
+                  analysis={selectedMatch.aiAnalysis}
+                  sourceImage={selectedMatch.lostItem.imageUrl}
+                  targetImage={selectedMatch.foundItem.imageUrl}
+                />
+              )}
 
               {/* Confidence Analysis */}
               <div className="glass-card p-6 rounded-2xl">
