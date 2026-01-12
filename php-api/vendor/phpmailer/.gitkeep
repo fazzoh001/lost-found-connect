@@ -1,0 +1,9 @@
+# PHPMailer Directory
+# 
+# Download PHPMailer from: https://github.com/PHPMailer/PHPMailer/releases
+# Extract the contents so that you have:
+#   - php-api/vendor/phpmailer/src/Exception.php
+#   - php-api/vendor/phpmailer/src/PHPMailer.php
+#   - php-api/vendor/phpmailer/src/SMTP.php
+#
+# Or use Composer: composer require phpmailer/phpmailer

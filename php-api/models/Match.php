@@ -1,7 +1,10 @@
 <?php
+require_once __DIR__ . '/../services/NotificationService.php';
+
 class ItemMatch {
     private $conn;
     private $table = "matches";
+    private $notificationService;
 
     public $id;
     public $lost_item_id;
@@ -12,6 +15,7 @@ class ItemMatch {
 
     public function __construct($db) {
         $this->conn = $db;
+        $this->notificationService = new NotificationService($db);
     }
 
     // Get matches for user
@@ -51,8 +55,8 @@ class ItemMatch {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // Create match
-    public function create() {
+    // Create match with email notification
+    public function create($sendNotification = true) {
         $this->id = $this->generateUUID();
         $this->status = 'pending';
         
@@ -69,9 +73,43 @@ class ItemMatch {
         $stmt->bindParam(':status', $this->status);
 
         if ($stmt->execute()) {
+            // Send email notification if enabled
+            if ($sendNotification) {
+                $this->sendMatchNotification();
+            }
             return $this->id;
         }
         return false;
+    }
+
+    // Send email notification for a match
+    private function sendMatchNotification() {
+        try {
+            // Get full item details
+            $lostItem = $this->getItemById($this->lost_item_id);
+            $foundItem = $this->getItemById($this->found_item_id);
+            
+            if ($lostItem && $foundItem) {
+                $this->notificationService->sendMatchNotification(
+                    $this->id,
+                    $lostItem,
+                    $foundItem,
+                    $this->match_score
+                );
+            }
+        } catch (Exception $e) {
+            // Log error but don't fail the match creation
+            error_log("Failed to send match notification: " . $e->getMessage());
+        }
+    }
+
+    // Get item by ID for notifications
+    private function getItemById($itemId) {
+        $query = "SELECT * FROM items WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $itemId);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     // Update match status
