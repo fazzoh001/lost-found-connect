@@ -58,11 +58,58 @@ define('JWT_SECRET', 'your-secure-random-string-here');
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/matches/index.php` | Get user's matches (auth required) |
+| POST | `/api/matches/auto-match.php` | Auto-match an item (auth required) |
+| POST | `/api/matches/run-all.php` | Run matching for all items (auth required) |
+| POST | `/api/matches/send-notification.php` | Send match notification email (auth required) |
+| POST | `/api/matches/test-email.php` | Test email configuration (auth required) |
 
 ### File Upload
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/upload/image.php` | Upload image (auth required) |
+
+## Email Notifications Setup (PHPMailer + Gmail SMTP)
+
+### 1. Download PHPMailer
+Download PHPMailer from https://github.com/PHPMailer/PHPMailer/releases
+
+Extract and copy the `src` folder to:
+```
+php-api/vendor/phpmailer/src/
+```
+
+You should have these files:
+- `php-api/vendor/phpmailer/src/Exception.php`
+- `php-api/vendor/phpmailer/src/PHPMailer.php`
+- `php-api/vendor/phpmailer/src/SMTP.php`
+
+### 2. Configure Gmail SMTP
+Edit `config/mail.php`:
+
+```php
+public static $username = 'your-email@gmail.com';
+public static $password = 'your-16-char-app-password';
+public static $fromEmail = 'your-email@gmail.com';
+```
+
+### 3. Generate Gmail App Password
+1. Go to your Google Account: https://myaccount.google.com
+2. Security → 2-Step Verification (must be enabled)
+3. App passwords → Generate new app password
+4. Select "Mail" and your device
+5. Copy the 16-character password to `config/mail.php`
+
+### 4. Test Email Configuration
+```bash
+curl -X POST http://localhost/php-api/api/matches/test-email.php \
+  -H "Authorization: Bearer <token>"
+```
+
+### How Email Notifications Work
+- When a match is created (via auto-match), both users receive an email
+- The lost item owner gets notified about the potential match
+- The found item owner gets notified that their item may belong to someone
+- Emails include item details, match score, and safety tips
 
 ## Authentication
 
