@@ -20,9 +20,9 @@ serve(async (req) => {
   }
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) {
+      throw new Error("OPENAI_API_KEY is not configured");
     }
 
     const { 
@@ -41,7 +41,7 @@ serve(async (req) => {
       );
     }
 
-    // Build the prompt for visual comparison
+    // System prompt for visual comparison
     const systemPrompt = `You are an AI assistant specialized in comparing images of lost and found items.
 Your task is to analyze two images and determine if they could be the same item.
 
@@ -79,15 +79,15 @@ Analyze the images and provide your assessment in the following JSON format:
   "recommendation": "<likely_match|possible_match|unlikely_match>"
 }`;
 
-    // Use Lovable AI with vision capabilities
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    // Call OpenAI API directly with GPT-4 Vision
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "gpt-4o",
         messages: [
           { role: "system", content: systemPrompt },
           {
@@ -96,42 +96,44 @@ Analyze the images and provide your assessment in the following JSON format:
               { type: "text", text: userPrompt },
               {
                 type: "image_url",
-                image_url: { url: sourceImageUrl }
+                image_url: { url: sourceImageUrl, detail: "high" }
               },
               {
                 type: "image_url",
-                image_url: { url: targetImageUrl }
+                image_url: { url: targetImageUrl, detail: "high" }
               }
             ]
           }
         ],
         max_tokens: 1000,
+        temperature: 0.3,
       }),
     });
 
     if (!response.ok) {
+      const errorData = await response.text();
+      console.error("OpenAI API error:", response.status, errorData);
+      
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      if (response.status === 402) {
+      if (response.status === 401) {
         return new Response(
-          JSON.stringify({ error: "Payment required. Please add credits to your account." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({ error: "Invalid API key. Please check your OpenAI API key." }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      throw new Error(`AI gateway error: ${response.status}`);
+      throw new Error(`OpenAI API error: ${response.status}`);
     }
 
     const aiResponse = await response.json();
     const content = aiResponse.choices?.[0]?.message?.content;
 
     if (!content) {
-      throw new Error("No response from AI");
+      throw new Error("No response from OpenAI");
     }
 
     // Parse the JSON response from the AI
@@ -162,7 +164,7 @@ Analyze the images and provide your assessment in the following JSON format:
       JSON.stringify({
         success: true,
         analysis,
-        model: "google/gemini-2.5-flash",
+        model: "gpt-4o",
         timestamp: new Date().toISOString()
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
